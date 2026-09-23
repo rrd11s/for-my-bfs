@@ -390,7 +390,7 @@ local TitleLbl = Instance.new("TextLabel")
 TitleLbl.Size = UDim2.new(0, 150, 0, 24)
 TitleLbl.Position = UDim2.new(0, 48, 0.5, -12)
 TitleLbl.BackgroundTransparency = 1
-TitleLbl.Text = "VEROLIX HUB"
+TitleLbl.Text = "STAT GLOBAL"
 TitleLbl.Font = Enum.Font.GothamBold
 TitleLbl.TextSize = 13
 TitleLbl.TextColor3 = Color3.fromRGB(240, 242, 250)
@@ -824,9 +824,54 @@ Players.PlayerRemoving:Connect(function(p)
 end)
 RefreshFlingPlayerList()
 
+
+local AutoClick_MinDelay = 25
+local AutoClick_MaxDelay = 35
+
 local cardAutoMain = CreateCard(autoL, "Auto Clicker Controls")
 local autoToggleUpdater = CreateToggle(cardAutoMain, "Auto Clicker (25ms)", AutoClick_Enabled, function(s) AutoClick_Enabled = s end)
 CreateToggle(cardAutoMain, "Random Offset (+-35ms)", AutoClick_RandomOffset, function(s) AutoClick_RandomOffset = s end)
+
+
+local cardAutoSpeed = CreateCard(autoR, "Speed Settings")
+
+
+local customSpeedBtn = CreateButton(cardAutoSpeed, "Custom Speed", tostring(AutoClick_MinDelay) .. "ms", function(btn)
+    local popup = Instance.new("TextBox")
+    popup.Size = UDim2.new(0, 100, 0, 25)
+    popup.Position = UDim2.new(1, -100, 0, 0)
+    popup.BackgroundColor3 = Color3.fromRGB(30, 32, 44)
+    popup.TextColor3 = Color3.fromRGB(255, 255, 255)
+    popup.Text = tostring(AutoClick_MinDelay)
+    popup.ClearTextOnFocus = false
+    popup.Font = Enum.Font.GothamMedium
+    popup.TextSize = 10
+    popup.Parent = btn.Parent
+
+    popup.FocusLost:Connect(function()
+        local val = tonumber(popup.Text)
+        if val then
+           
+            AutoClick_MinDelay = math.max(0, val)
+            AutoClick_MaxDelay = AutoClick_MinDelay + 10
+            btn.Text = tostring(AutoClick_MinDelay) .. "ms"
+        end
+        popup:Destroy()
+    end)
+end)
+
+
+CreateButton(cardAutoSpeed, "Reset to Default", "25 - 35ms", function(btn)
+    AutoClick_MinDelay = 25
+    AutoClick_MaxDelay = 35
+    
+
+    if customSpeedBtn then
+        customSpeedBtn.Text = "25ms"
+    end
+end)
+
+
 
 local cardProtect = CreateCard(setL, "Protection")
 CreateToggle(cardProtect, "Anti-Fling Protection", AntiFling_Enabled, function(s) AntiFling_Enabled = s end)
@@ -849,5 +894,377 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
         if LockedTarget then LockedTarget = nil else LockedTarget = GetClosestTarget() end
     elseif input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl then
         MainFrame.Visible = not MainFrame.Visible
+    end
+end)
+
+local macroL, macroR = CreateTab("Macro", 5)
+
+
+NavButtons["Settings"].Btn.LayoutOrder = 6
+
+local Macro_Key = Enum.KeyCode.F
+local Macro_ToggleKey = Enum.KeyCode.Zero
+local Macro_Delay = 25
+local Macro_Enabled = false
+
+local function KeyCodeFromText(text, fallback)
+    local key
+    pcall(function()
+        key = Enum.KeyCode[string.upper(text)]
+    end)
+
+    if key then
+        return key
+    end
+
+    return fallback
+end
+
+local macroControls = CreateCard(macroL, "Macro Controls")
+
+CreateButton(macroControls, "Macro Key", Macro_Key.Name, function(btn)
+    local current = Macro_Key.Name
+
+    local popup = Instance.new("TextBox")
+    popup.Size = UDim2.new(0, 100, 0, 25)
+    popup.Position = UDim2.new(1, -100, 0, 0)
+    popup.BackgroundColor3 = Color3.fromRGB(30, 32, 44)
+    popup.TextColor3 = Color3.fromRGB(255, 255, 255)
+    popup.Text = current
+    popup.ClearTextOnFocus = false
+    popup.Font = Enum.Font.GothamMedium
+    popup.TextSize = 10
+    popup.Parent = btn.Parent
+
+    popup.FocusLost:Connect(function()
+        Macro_Key = KeyCodeFromText(popup.Text, Macro_Key)
+        btn.Text = Macro_Key.Name
+        popup:Destroy()
+    end)
+end)
+
+CreateButton(macroControls, "Toggle Key", Macro_ToggleKey.Name, function(btn)
+    local current = Macro_ToggleKey.Name
+
+    local popup = Instance.new("TextBox")
+    popup.Size = UDim2.new(0, 100, 0, 25)
+    popup.Position = UDim2.new(1, -100, 0, 0)
+    popup.BackgroundColor3 = Color3.fromRGB(30, 32, 44)
+    popup.TextColor3 = Color3.fromRGB(255, 255, 255)
+    popup.Text = current
+    popup.ClearTextOnFocus = false
+    popup.Font = Enum.Font.GothamMedium
+    popup.TextSize = 10
+    popup.Parent = btn.Parent
+
+    popup.FocusLost:Connect(function()
+        Macro_ToggleKey = KeyCodeFromText(popup.Text, Macro_ToggleKey)
+        btn.Text = Macro_ToggleKey.Name
+        popup:Destroy()
+    end)
+end)
+
+
+local macroSpeed = CreateCard(macroR, "Macro Speed")
+
+CreateButton(macroSpeed, "Speed", "25 ms", function(btn)
+    Macro_Delay = Macro_Delay + 5
+
+    if Macro_Delay > 100 then
+        Macro_Delay = 0
+    end
+
+    btn.Text = tostring(Macro_Delay) .. " ms"
+end)
+
+CreateButton(macroSpeed, "Recommended", "25–35 ms", function(btn)
+    Macro_Delay = 25
+    btn.Text = "25 ms"
+end)
+
+CreateButton(macroSpeed, "Fast Mode", "35 ms", function(btn)
+    Macro_Delay = 35
+    btn.Text = "35 ms"
+end)
+
+
+CreateButton(macroSpeed, "Custom Speed", "Set", function(btn)
+    local popup = Instance.new("TextBox")
+    popup.Size = UDim2.new(0, 100, 0, 25)
+    popup.Position = UDim2.new(1, -100, 0, 0)
+    popup.BackgroundColor3 = Color3.fromRGB(30, 32, 44)
+    popup.TextColor3 = Color3.fromRGB(255, 255, 255)
+    popup.Text = tostring(Macro_Delay)
+    popup.ClearTextOnFocus = false
+    popup.Font = Enum.Font.GothamMedium
+    popup.TextSize = 10
+    popup.Parent = btn.Parent
+
+    popup.FocusLost:Connect(function()
+        local value = tonumber(popup.Text)
+
+        if value then
+            Macro_Delay = math.max(0, value)
+            btn.Text = tostring(Macro_Delay) .. " ms"
+        end
+
+        popup:Destroy()
+    end)
+end)
+
+
+local macroInfo = CreateCard(macroR, "Information")
+
+local infoLabel = Instance.new("TextLabel")
+infoLabel.Size = UDim2.new(1, 0, 0, 70)
+infoLabel.BackgroundTransparency = 1
+infoLabel.TextWrapped = true
+infoLabel.TextYAlignment = Enum.TextYAlignment.Top
+infoLabel.TextXAlignment = Enum.TextXAlignment.Left
+infoLabel.Font = Enum.Font.Gotham
+infoLabel.TextSize = 10
+infoLabel.TextColor3 = Color3.fromRGB(145, 150, 170)
+infoLabel.Text =
+    "Recommended speed: 25–35 ms\n" ..
+    "Lower values are faster but may cause more load.\n" ..
+    "0 ms is available for custom configurations."
+infoLabel.Parent = macroInfo
+
+
+local macroStatus = CreateCard(macroL, "Status")
+
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Size = UDim2.new(1, 0, 0, 24)
+statusLabel.BackgroundTransparency = 1
+statusLabel.Text = "Macro Status: OFF"
+statusLabel.Font = Enum.Font.GothamBold
+statusLabel.TextSize = 11
+statusLabel.TextColor3 = Color3.fromRGB(150, 155, 175)
+statusLabel.TextXAlignment = Enum.TextXAlignment.Left
+statusLabel.Parent = macroStatus
+
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+
+    if input.KeyCode == Macro_ToggleKey then
+        Macro_Enabled = not Macro_Enabled
+
+        statusLabel.Text = "Macro Status: " .. (Macro_Enabled and "ON" or "OFF")
+        statusLabel.TextColor3 =
+            Macro_Enabled
+            and Color3.fromRGB(80, 220, 120)
+            or Color3.fromRGB(150, 155, 175)
+    end
+end)
+
+
+task.spawn(function()
+    while true do
+        if Macro_Enabled and Master_Enabled then
+            pcall(function()
+                VirtualInputManager:SendKeyEvent(
+                    true,
+                    Macro_Key,
+                    false,
+                    game
+                )
+
+                task.wait(0.001)
+
+                VirtualInputManager:SendKeyEvent(
+                    false,
+                    Macro_Key,
+                    false,
+                    game
+                )
+            end)
+
+            task.wait(math.max(0, Macro_Delay) / 1000)
+        else
+            task.wait(0.1)
+        end
+    end
+end)
+
+
+local hitL, hitR = CreateTab("Hitbox", 6)
+
+
+if NavButtons["Settings"] and NavButtons["Settings"].Btn then
+    NavButtons["Settings"].Btn.LayoutOrder = 7
+end
+
+
+local Hitbox_Enabled = false
+local Hitbox_Size = 10
+local Hitbox_Transparency = 0.7
+local Hitbox_TargetPart = "HumanoidRootPart" 
+local Hitbox_TeamCheck = true
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+
+local hitboxControls = CreateCard(hitL, "Hitbox Controls")
+
+
+CreateButton(hitboxControls, "Hitbox Expander", "OFF", function(btn)
+    Hitbox_Enabled = not Hitbox_Enabled
+    btn.Text = Hitbox_Enabled and "ON" or "OFF"
+    
+    
+    if statusHitboxLabel then
+        statusHitboxLabel.Text = "Hitbox Status: " .. (Hitbox_Enabled and "ON" or "OFF")
+        statusHitboxLabel.TextColor3 = Hitbox_Enabled and Color3.fromRGB(80, 220, 120) or Color3.fromRGB(150, 155, 175)
+    end
+end)
+
+CreateButton(hitboxControls, "Target Part", Hitbox_TargetPart, function(btn)
+    if Hitbox_TargetPart == "HumanoidRootPart" then
+        Hitbox_TargetPart = "Head"
+    else
+        Hitbox_TargetPart = "HumanoidRootPart"
+    end
+    btn.Text = Hitbox_TargetPart
+end)
+
+
+CreateButton(hitboxControls, "Team Check", "ON", function(btn)
+    Hitbox_TeamCheck = not Hitbox_TeamCheck
+    btn.Text = Hitbox_TeamCheck and "ON" or "OFF"
+end)
+
+
+
+local hitboxSettings = CreateCard(hitR, "Hitbox Size & Visuals")
+
+CreateButton(hitboxSettings, "Default Size", "10 studs", function(btn)
+    Hitbox_Size = 10
+    btn.Text = "10 studs"
+end)
+
+
+CreateButton(hitboxSettings, "Custom Size", "Set Size", function(btn)
+    local popup = Instance.new("TextBox")
+    popup.Size = UDim2.new(0, 100, 0, 25)
+    popup.Position = UDim2.new(1, -100, 0, 0)
+    popup.BackgroundColor3 = Color3.fromRGB(30, 32, 44)
+    popup.TextColor3 = Color3.fromRGB(255, 255, 255)
+    popup.Text = tostring(Hitbox_Size)
+    popup.ClearTextOnFocus = false
+    popup.Font = Enum.Font.GothamMedium
+    popup.TextSize = 10
+    popup.Parent = btn.Parent
+
+    popup.FocusLost:Connect(function()
+        local val = tonumber(popup.Text)
+        if val then
+            Hitbox_Size = math.clamp(val, 2, 100) 
+            btn.Text = tostring(Hitbox_Size) .. " studs"
+        end
+        popup:Destroy()
+    end)
+end)
+
+CreateButton(hitboxSettings, "Transparency", tostring(Hitbox_Transparency), function(btn)
+    local popup = Instance.new("TextBox")
+    popup.Size = UDim2.new(0, 100, 0, 25)
+    popup.Position = UDim2.new(1, -100, 0, 0)
+    popup.BackgroundColor3 = Color3.fromRGB(30, 32, 44)
+    popup.TextColor3 = Color3.fromRGB(255, 255, 255)
+    popup.Text = tostring(Hitbox_Transparency)
+    popup.ClearTextOnFocus = false
+    popup.Font = Enum.Font.GothamMedium
+    popup.TextSize = 10
+    popup.Parent = btn.Parent
+
+    popup.FocusLost:Connect(function()
+        local val = tonumber(popup.Text)
+        if val then
+            Hitbox_Transparency = math.clamp(val, 0, 1)
+            btn.Text = tostring(Hitbox_Transparency)
+        end
+        popup:Destroy()
+    end)
+end)
+
+
+
+local hitboxInfo = CreateCard(hitR, "Information")
+
+local infoHitboxLabel = Instance.new("TextLabel")
+infoHitboxLabel.Size = UDim2.new(1, 0, 0, 70)
+infoHitboxLabel.BackgroundTransparency = 1
+infoHitboxLabel.TextWrapped = true
+infoHitboxLabel.TextYAlignment = Enum.TextYAlignment.Top
+infoHitboxLabel.TextXAlignment = Enum.TextXAlignment.Left
+infoHitboxLabel.Font = Enum.Font.Gotham
+infoHitboxLabel.TextSize = 10
+infoHitboxLabel.TextColor3 = Color3.fromRGB(145, 150, 170)
+infoHitboxLabel.Text =
+    "• Expands target hitboxes to make shots hit easier.\n" ..
+    "• Recommended Size: 10 - 25 studs.\n" ..
+    "• Transparency: 1 = Completely Invisible, 0.5 = Semi-visible.\n" ..
+    "• Team Check prevents expanding teammates."
+infoHitboxLabel.Parent = hitboxInfo
+
+
+
+local hitboxStatusCard = CreateCard(hitL, "Status")
+
+local statusHitboxLabel = Instance.new("TextLabel")
+statusHitboxLabel.Size = UDim2.new(1, 0, 0, 24)
+statusHitboxLabel.BackgroundTransparency = 1
+statusHitboxLabel.Text = "Hitbox Status: OFF"
+statusHitboxLabel.Font = Enum.Font.GothamBold
+statusHitboxLabel.TextSize = 11
+statusHitboxLabel.TextColor3 = Color3.fromRGB(150, 155, 175)
+statusHitboxLabel.TextXAlignment = Enum.TextXAlignment.Left
+statusHitboxLabel.Parent = hitboxStatusCard
+
+
+
+
+task.spawn(function()
+    while true do
+        task.wait(0.1)
+
+     
+        local isMasterOn = (typeof(Master_Enabled) == "boolean") and Master_Enabled or true
+
+        pcall(function()
+            for _, player in ipairs(Players:GetPlayers()) do
+                if player ~= LocalPlayer and player.Character then
+                    local char = player.Character
+                    local targetPart = char:FindFirstChild(Hitbox_TargetPart)
+                    local humanoid = char:FindFirstChildOfClass("Humanoid")
+
+                    if targetPart and humanoid and humanoid.Health > 0 then
+                        
+                        local isEnemy = true
+                        if Hitbox_TeamCheck and LocalPlayer.Team and player.Team then
+                            if player.Team == LocalPlayer.Team then
+                                isEnemy = false
+                            end
+                        end
+                        if Hitbox_Enabled and isMasterOn and isEnemy then
+                            targetPart.Size = Vector3.new(Hitbox_Size, Hitbox_Size, Hitbox_Size)
+                            targetPart.Transparency = Hitbox_Transparency
+                            targetPart.CanCollide = false
+                        else
+                          
+                            if Hitbox_TargetPart == "HumanoidRootPart" then
+                                targetPart.Size = Vector3.new(2, 2, 1)
+                                targetPart.Transparency = 1
+                            elseif Hitbox_TargetPart == "Head" then
+                                targetPart.Size = Vector3.new(2, 1, 1)
+                                targetPart.Transparency = 0
+                            end
+                        end
+                    end
+                end
+            end
+        end)
     end
 end)
