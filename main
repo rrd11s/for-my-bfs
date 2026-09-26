@@ -1,1270 +1,1399 @@
-_G.FriendColor = Color3.fromRGB(0, 125, 255)
-_G.EnemyColor = Color3.fromRGB(255, 255, 255)
+_G.FriendColor=Color3.fromRGB(0,125,255)
+_G.EnemyColor=Color3.fromRGB(255,255,255)
 
 if _G.ESP_Loaded then return end
-_G.ESP_Loaded = true
+_G.ESP_Loaded=true
 
-local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
-local RunService = game:GetService("RunService")
-local Stats = game:GetService("Stats")
-local VirtualInputManager = game:GetService("VirtualInputManager")
-local LocalPlayer = Players.LocalPlayer
-local Mouse = LocalPlayer:GetMouse()
-local Camera = workspace.CurrentCamera
+local a=game:GetService"Players"
+local b=game:GetService"UserInputService"
+local c=game:GetService"TweenService"
+local d=game:GetService"RunService"
+local e=game:GetService"Stats"
+local f=game:GetService"VirtualInputManager"
+local g=a.LocalPlayer
+local h=g:GetMouse()
+local i=workspace.CurrentCamera
 
-local BannedUsers = {"none", "none"}
+local j={"none","none"}
 
-local function IsBannedUser(player)
-    for _, name in ipairs(BannedUsers) do
-        if string.lower(player.Name) == string.lower(name) or string.lower(player.DisplayName) == string.lower(name) then
-            return true
-        end
-    end
-    return false
+local function IsBannedUser(k)
+for l,m in ipairs(j)do
+if string.lower(k.Name)==string.lower(m)or string.lower(k.DisplayName)==string.lower(m)then
+return true
+end
+end
+return false
 end
 
-if IsBannedUser(LocalPlayer) then
-    LocalPlayer:Kick("Banned")
-    return
+if IsBannedUser(g)then
+g:Kick"Banned"
+return
 end
 
-local Master_Enabled = true
-local ESP_Enabled = true
-local Health_Enabled = true
-local AntiLag_Enabled = false
+local k=true
+local l=true
+local m=true
+local n=false
 
-local Lock_Enabled = true
-local Lock_Friends = false
-local Lock_Key = Enum.KeyCode.Q
-local LockedTarget = nil
+local o=true
+local p=false
+local q=Enum.KeyCode.Q
+local r
 
-local Lock_TargetPart = "HumanoidRootPart"
-local Lock_Smoothness = false
-local Lock_SmoothAmount = 0.3
-local Lock_Prediction = false
+local s="HumanoidRootPart"
+local t=false
+local u=0.3
+local v=false
 
-local AutoClick_Enabled = false
-local AutoClick_RandomOffset = true
+local w=false
+local x=true
 
-local AntiFling_Enabled = false
-local Fling_Active = false
-local SelectedFlingTarget = nil
+local y=false
+local z=false
+local A
 
-local FontPresets = {
-    {Name = "Gotham Medium", Font = Enum.Font.GothamMedium},
-    {Name = "Gotham Bold", Font = Enum.Font.GothamBold},
-    {Name = "Source Sans", Font = Enum.Font.SourceSansBold},
-    {Name = "Arcade", Font = Enum.Font.Arcade},
-    {Name = "Code", Font = Enum.Font.Code}
+local B={
+{Name="Gotham Medium",Font=Enum.Font.GothamMedium},
+{Name="Gotham Bold",Font=Enum.Font.GothamBold},
+{Name="Source Sans",Font=Enum.Font.SourceSansBold},
+{Name="Arcade",Font=Enum.Font.Arcade},
+{Name="Code",Font=Enum.Font.Code}
 }
-local currentFontIdx = 1
+local C=1
 
-local ColorPresets = {
-    {Name = "White", Color = Color3.fromRGB(255, 255, 255)},
-    {Name = "Red", Color = Color3.fromRGB(255, 60, 60)},
-    {Name = "Green", Color = Color3.fromRGB(60, 255, 120)},
-    {Name = "Cyan", Color = Color3.fromRGB(0, 220, 255)},
-    {Name = "Blue", Color = Color3.fromRGB(80, 110, 255)}
+local D={
+{Name="White",Color=Color3.fromRGB(255,255,255)},
+{Name="Red",Color=Color3.fromRGB(255,60,60)},
+{Name="Green",Color=Color3.fromRGB(60,255,120)},
+{Name="Cyan",Color=Color3.fromRGB(0,220,255)},
+{Name="Blue",Color=Color3.fromRGB(80,110,255)}
 }
-local enemyColorIdx = 1
+local E=1
 
-local CurrentFPS = 0
-local CurrentPing = 0
+local F=0
+local G=0
 
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui", 10)
-local CoreGui = game:GetService("CoreGui")
+local H=g:WaitForChild("PlayerGui",10)
+local I=game:GetService"CoreGui"
 
-local Holder = Instance.new("Folder")
-Holder.Name = "ESP_Holder"
-Holder.Parent = CoreGui
+local J=Instance.new"Folder"
+J.Name="ESP_Holder"
+J.Parent=I
 
-local function GetPlayerHealth(player)
-    if not player or not player.Character then return 100, 100 end
-    local char = player.Character
-    local hum = char:FindFirstChildOfClass("Humanoid")
-    
-    local attrHp = char:GetAttribute("Health") or char:GetAttribute("HP")
-    local attrMaxHp = char:GetAttribute("MaxHealth") or char:GetAttribute("MaxHP") or 100
-    if attrHp then return math.floor(attrHp), math.floor(attrMaxHp) end
-    
-    local valHp = char:FindFirstChild("Health") or char:FindFirstChild("HP")
-    local valMaxHp = char:FindFirstChild("MaxHealth") or char:FindFirstChild("MaxHP")
-    if valHp and (valHp:IsA("NumberValue") or valHp:IsA("IntValue")) then
-        local maxVal = (valMaxHp and (valMaxHp:IsA("NumberValue") or valMaxHp:IsA("IntValue"))) and valMaxHp.Value or 100
-        return math.floor(valHp.Value), math.floor(maxVal)
-    end
-    
-    if hum then return math.floor(hum.Health), math.floor(hum.MaxHealth) end
-    return 100, 100
+local function GetPlayerHealth(K)
+if not K or not K.Character then return 100,100 end
+local L=K.Character
+local M=L:FindFirstChildOfClass"Humanoid"
+
+local N=L:GetAttribute"Health"or L:GetAttribute"HP"
+local O=L:GetAttribute"MaxHealth"or L:GetAttribute"MaxHP"or 100
+if N then return math.floor(N),math.floor(O)end
+
+local P=L:FindFirstChild"Health"or L:FindFirstChild"HP"
+local Q=L:FindFirstChild"MaxHealth"or L:FindFirstChild"MaxHP"
+if P and(P:IsA"NumberValue"or P:IsA"IntValue")then
+local R=(Q and(Q:IsA"NumberValue"or Q:IsA"IntValue"))and Q.Value or 100
+return math.floor(P.Value),math.floor(R)
 end
 
-local StatsGui = Instance.new("ScreenGui")
-StatsGui.Name = "VerolixStats"
-StatsGui.ResetOnSpawn = false
-StatsGui.Parent = PlayerGui
+if M then return math.floor(M.Health),math.floor(M.MaxHealth)end
+return 100,100
+end
 
-local StatsLabel = Instance.new("TextLabel")
-StatsLabel.Size = UDim2.new(0, 320, 0, 24)
-StatsLabel.Position = UDim2.new(0, 16, 0, 12)
-StatsLabel.BackgroundTransparency = 1
-StatsLabel.Font = Enum.Font.GothamBold
-StatsLabel.TextSize = 12
-StatsLabel.TextColor3 = Color3.fromRGB(220, 225, 240)
-StatsLabel.TextXAlignment = Enum.TextXAlignment.Left
-StatsLabel.Text = "FPS: -- | Ping: -- ms | Auto: OFF"
-StatsLabel.Parent = StatsGui
+local K=Instance.new"ScreenGui"
+K.Name="VerolixStats"
+K.ResetOnSpawn=false
+K.Parent=H
 
-RunService.RenderStepped:Connect(function(dt)
-    CurrentFPS = math.floor(1 / dt)
-    if Master_Enabled then
-        StatsLabel.Text = "FPS: " .. CurrentFPS .. " | Ping: " .. CurrentPing .. " ms | Auto: " .. (AutoClick_Enabled and "ON" or "OFF")
-        StatsLabel.Visible = true
-    else
-        StatsLabel.Visible = false
-    end
+local L=Instance.new"TextLabel"
+L.Size=UDim2.new(0,320,0,24)
+L.Position=UDim2.new(0,16,0,12)
+L.BackgroundTransparency=1
+L.Font=Enum.Font.GothamBold
+L.TextSize=12
+L.TextColor3=Color3.fromRGB(220,225,240)
+L.TextXAlignment=Enum.TextXAlignment.Left
+L.Text="FPS: -- | Ping: -- ms | Auto: OFF"
+L.Parent=K
+
+d.RenderStepped:Connect(function(M)
+F=math.floor(1/M)
+if k then
+L.Text="FPS: "..F.." | Ping: "..G.." ms | Auto: "..(w and"ON"or"OFF")
+L.Visible=true
+else
+L.Visible=false
+end
 end)
 
 task.spawn(function()
-    while task.wait(1) do
-        pcall(function()
-            CurrentPing = math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
-        end)
-    end
+while task.wait(1)do
+pcall(function()
+G=math.floor(e.Network.ServerStatsItem["Data Ping"]:GetValue())
+end)
+end
 end)
 
 task.spawn(function()
-    while true do
-        if Master_Enabled and AutoClick_Enabled then
-            pcall(function()
-                if mouse1click then
-                    mouse1click()
-                else
-                    VirtualInputManager:SendMouseButtonEvent(Mouse.X, Mouse.Y, 0, true, game, 1)
-                    task.wait(0.005)
-                    VirtualInputManager:SendMouseButtonEvent(Mouse.X, Mouse.Y, 0, false, game, 1)
-                end
-            end)
-            local delayTime = 0.025
-            if AutoClick_RandomOffset then
-                delayTime = math.max(0.005, delayTime + (math.random(-35, 35) / 1000))
-            end
-            task.wait(delayTime)
-        else
-            task.wait(0.1)
-        end
-    end
+while true do
+if k and w then
+pcall(function()
+if mouse1click then
+mouse1click()
+else
+f:SendMouseButtonEvent(h.X,h.Y,0,true,game,1)
+task.wait(0.005)
+f:SendMouseButtonEvent(h.X,h.Y,0,false,game,1)
+end
+end)
+local M=0.025
+if x then
+M=math.max(0.005,M+(math.random(-35,35)/1000))
+end
+task.wait(M)
+else
+task.wait(0.1)
+end
+end
 end)
 
-RunService.Stepped:Connect(function()
-    if Master_Enabled and AntiFling_Enabled and LocalPlayer.Character then
-        for _, p in ipairs(Players:GetPlayers()) do
-            if p ~= LocalPlayer and p.Character then
-                for _, part in ipairs(p.Character:GetChildren()) do
-                    if part:IsA("BasePart") then part.CanCollide = false end
-                end
-            end
-        end
-        local root = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-        if root then
-            if root.AssemblyLinearVelocity.Magnitude > 250 then root.AssemblyLinearVelocity = Vector3.new(0, 0, 0) end
-            if root.AssemblyAngularVelocity.Magnitude > 250 then root.AssemblyAngularVelocity = Vector3.new(0, 0, 0) end
-        end
-    end
+d.Stepped:Connect(function()
+if k and y and g.Character then
+for M,N in ipairs(a:GetPlayers())do
+if N~=g and N.Character then
+for O,P in ipairs(N.Character:GetChildren())do
+if P:IsA"BasePart"then P.CanCollide=false end
+end
+end
+end
+local M=g.Character:FindFirstChild"HumanoidRootPart"
+if M then
+if M.AssemblyLinearVelocity.Magnitude>250 then M.AssemblyLinearVelocity=Vector3.new(0,0,0)end
+if M.AssemblyAngularVelocity.Magnitude>250 then M.AssemblyAngularVelocity=Vector3.new(0,0,0)end
+end
+end
 end)
 
-RunService.Heartbeat:Connect(function()
-    if Master_Enabled and Fling_Active and SelectedFlingTarget and SelectedFlingTarget.Character and LocalPlayer.Character then
-        local myRoot = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-        local targetRoot = SelectedFlingTarget.Character:FindFirstChild("HumanoidRootPart")
-        if myRoot and targetRoot then
-            myRoot.AssemblyAngularVelocity = Vector3.new(999999, 999999, 999999)
-            myRoot.CFrame = targetRoot.CFrame * CFrame.new(0, 0, 0)
-        end
-    end
+d.Heartbeat:Connect(function()
+if k and z and A and A.Character and g.Character then
+local M=g.Character:FindFirstChild"HumanoidRootPart"
+local N=A.Character:FindFirstChild"HumanoidRootPart"
+if M and N then
+M.AssemblyAngularVelocity=Vector3.new(999999,999999,999999)
+M.CFrame=N.CFrame*CFrame.new(0,0,0)
+end
+end
 end)
 
-local function GetPlayerColor(player)
-    local isFriend = false
-    pcall(function() isFriend = LocalPlayer:IsFriendsWith(player.UserId) end)
-    return isFriend and _G.FriendColor or _G.EnemyColor
+local function GetPlayerColor(M)
+local N=false
+pcall(function()N=g:IsFriendsWith(M.UserId)end)
+return N and _G.FriendColor or _G.EnemyColor
 end
 
 local function GetClosestTarget()
-    local closest = nil
-    local maxDist = 1000
-    local mousePos = Vector2.new(Mouse.X, Mouse.Y)
+local M
+local N=1000
+local O=Vector2.new(h.X,h.Y)
 
-    for _, p in ipairs(Players:GetPlayers()) do
-        if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-            local hp, _ = GetPlayerHealth(p)
-            if hp > 0 then
-                local isFriend = false
-                pcall(function() isFriend = LocalPlayer:IsFriendsWith(p.UserId) end)
-                if not isFriend or Lock_Friends then
-                    local root = p.Character.HumanoidRootPart
-                    local pos, onScreen = Camera:WorldToViewportPoint(root.Position)
-                    if onScreen then
-                        local dist = (Vector2.new(pos.X, pos.Y) - mousePos).Magnitude
-                        if dist < maxDist then
-                            maxDist = dist
-                            closest = p
-                        end
-                    end
-                end
-            end
-        end
-    end
-    return closest
+for P,Q in ipairs(a:GetPlayers())do
+if Q~=g and Q.Character and Q.Character:FindFirstChild"HumanoidRootPart"then local
+R=GetPlayerHealth(Q)
+if R>0 then
+local S=false
+pcall(function()S=g:IsFriendsWith(Q.UserId)end)
+if not S or p then
+local T=Q.Character.HumanoidRootPart
+local U,V=i:WorldToViewportPoint(T.Position)
+if V then
+local W=(Vector2.new(U.X,U.Y)-O).Magnitude
+if W<N then
+N=W
+M=Q
+end
+end
+end
+end
+end
+end
+return M
 end
 
-local function UpdateTargetESP(player)
-    local charHolder = Holder:FindFirstChild(player.Name .. "_ESP")
-    if not charHolder then return end
+local function UpdateTargetESP(M)
+local N=J:FindFirstChild(M.Name.."_ESP")
+if not N then return end
 
-    local glow = charHolder:FindFirstChild("Glow")
-    local tag = charHolder:FindFirstChild("NameTag")
-    local label = tag and tag:FindFirstChildOfClass("TextLabel")
+local O=N:FindFirstChild"Glow"
+local P=N:FindFirstChild"NameTag"
+local Q=P and P:FindFirstChildOfClass"TextLabel"
 
-    local isVisible = Master_Enabled and ESP_Enabled
-    local pColor = GetPlayerColor(player)
+local R=k and l
+local S=GetPlayerColor(M)
 
-    if glow then
-        glow.Enabled = isVisible
-        glow.FillColor = pColor
-        glow.OutlineColor = pColor
-        glow.FillTransparency = AntiLag_Enabled and 0.85 or 0.5
-        glow.OutlineTransparency = AntiLag_Enabled and 1 or 0
-    end
+if O then
+O.Enabled=R
+O.FillColor=S
+O.OutlineColor=S
+O.FillTransparency=n and 0.85 or 0.5
+O.OutlineTransparency=n and 1 or 0
+end
 
-    if tag then tag.Enabled = isVisible end
+if P then P.Enabled=R end
 
-    if label and player.Character then
-        local hp, _ = GetPlayerHealth(player)
-        label.TextColor3 = pColor 
-        label.Font = FontPresets[currentFontIdx].Font
-        label.Text = Health_Enabled and (player.DisplayName .. " (@" .. player.Name .. ") | " .. hp .. " HP") or (player.DisplayName .. " (@" .. player.Name .. ")")
-    end
+if Q and M.Character then local
+T=GetPlayerHealth(M)
+Q.TextColor3=S
+Q.Font=B[C].Font
+Q.Text=m and(M.DisplayName.." (@"..M.Name..") | "..T.." HP")or(M.DisplayName.." (@"..M.Name..")")
+end
 end
 
 local function RefreshAllESP()
-    for _, charHolder in ipairs(Holder:GetChildren()) do
-        local pName = string.sub(charHolder.Name, 1, #charHolder.Name - 4)
-        local p = Players:FindFirstChild(pName)
-        if p then UpdateTargetESP(p) end
-    end
+for M,N in ipairs(J:GetChildren())do
+local O=string.sub(N.Name,1,#N.Name-4)
+local P=a:FindFirstChild(O)
+if P then UpdateTargetESP(P)end
+end
 end
 
-local function LoadCharacter(player, character)
-    if player == LocalPlayer or not character then return end
+local function LoadCharacter(M,N)
+if M==g or not N then return end
 
-    local head = character:FindFirstChild("Head")
-    local hum = character:FindFirstChildOfClass("Humanoid")
-    local timer = 0
-    while (not head or not hum) and timer < 10 do
-        task.wait(0.3)
-        head = character:FindFirstChild("Head")
-        hum = character:FindFirstChildOfClass("Humanoid")
-        timer = timer + 0.3
-    end
-    if not head or not hum then return end
+local O=N:FindFirstChild"Head"
+local P=N:FindFirstChildOfClass"Humanoid"
+local Q=0
+while(not O or not P)and Q<10 do
+task.wait(0.3)
+O=N:FindFirstChild"Head"
+P=N:FindFirstChildOfClass"Humanoid"
+Q=Q+0.3
+end
+if not O or not P then return end
 
-    local pColor = GetPlayerColor(player)
+local R=GetPlayerColor(M)
 
-    local oldHolder = Holder:FindFirstChild(player.Name .. "_ESP")
-    if oldHolder then oldHolder:Destroy() end
+local S=J:FindFirstChild(M.Name.."_ESP")
+if S then S:Destroy()end
 
-    local charHolder = Instance.new("Folder")
-    charHolder.Name = player.Name .. "_ESP"
-    charHolder.Parent = Holder
+local T=Instance.new"Folder"
+T.Name=M.Name.."_ESP"
+T.Parent=J
 
-    local highlight = Instance.new("Highlight")
-    highlight.Name = "Glow"
-    highlight.Adornee = character
-    highlight.FillColor = pColor
-    highlight.OutlineColor = pColor
-    highlight.FillTransparency = AntiLag_Enabled and 0.85 or 0.5
-    highlight.OutlineTransparency = AntiLag_Enabled and 1 or 0
-    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-    highlight.Enabled = Master_Enabled and ESP_Enabled
-    highlight.Parent = charHolder
+local U=Instance.new"Highlight"
+U.Name="Glow"
+U.Adornee=N
+U.FillColor=R
+U.OutlineColor=R
+U.FillTransparency=n and 0.85 or 0.5
+U.OutlineTransparency=n and 1 or 0
+U.DepthMode=Enum.HighlightDepthMode.AlwaysOnTop
+U.Enabled=k and l
+U.Parent=T
 
-    local nameTag = Instance.new("BillboardGui")
-    nameTag.Name = "NameTag"
-    nameTag.Size = UDim2.new(0, 160, 0, 35)
-    nameTag.AlwaysOnTop = true
-    nameTag.StudsOffset = Vector3.new(0, 2.5, 0)
-    nameTag.Adornee = head
-    nameTag.Enabled = Master_Enabled and ESP_Enabled
+local V=Instance.new"BillboardGui"
+V.Name="NameTag"
+V.Size=UDim2.new(0,160,0,35)
+V.AlwaysOnTop=true
+V.StudsOffset=Vector3.new(0,2.5,0)
+V.Adornee=O
+V.Enabled=k and l
 
-    local tagLabel = Instance.new("TextLabel")
-    tagLabel.BackgroundTransparency = 1
-    tagLabel.Size = UDim2.new(1, 0, 1, 0)
-    tagLabel.TextSize = 12
-    tagLabel.Font = FontPresets[currentFontIdx].Font
-    tagLabel.TextColor3 = pColor
-    tagLabel.TextStrokeTransparency = 0.2
-    tagLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-    tagLabel.Parent = nameTag
+local W=Instance.new"TextLabel"
+W.BackgroundTransparency=1
+W.Size=UDim2.new(1,0,1,0)
+W.TextSize=12
+W.Font=B[C].Font
+W.TextColor3=R
+W.TextStrokeTransparency=0.2
+W.TextStrokeColor3=Color3.fromRGB(0,0,0)
+W.Parent=V
 
-    nameTag.Parent = charHolder
+V.Parent=T
 
-    UpdateTargetESP(player)
+UpdateTargetESP(M)
 
-    hum.HealthChanged:Connect(function()
-        if Health_Enabled then UpdateTargetESP(player) end
-    end)
+P.HealthChanged:Connect(function()
+if m then UpdateTargetESP(M)end
+end)
 end
 
-local function LoadPlayer(player)
-    if player == LocalPlayer then return end
-    if player.Character then task.spawn(LoadCharacter, player, player.Character) end
-    player.CharacterAdded:Connect(function(char) task.spawn(LoadCharacter, player, char) end)
+local function LoadPlayer(M)
+if M==g then return end
+if M.Character then task.spawn(LoadCharacter,M,M.Character)end
+M.CharacterAdded:Connect(function(N)task.spawn(LoadCharacter,M,N)end)
 end
 
-for _, player in ipairs(Players:GetPlayers()) do LoadPlayer(player) end
-Players.PlayerAdded:Connect(LoadPlayer)
-Players.PlayerRemoving:Connect(function(player)
-    local oldHolder = Holder:FindFirstChild(player.Name .. "_ESP")
-    if oldHolder then oldHolder:Destroy() end
+for M,N in ipairs(a:GetPlayers())do LoadPlayer(N)end
+a.PlayerAdded:Connect(LoadPlayer)
+a.PlayerRemoving:Connect(function(M)
+local N=J:FindFirstChild(M.Name.."_ESP")
+if N then N:Destroy()end
 end)
 
-RunService.RenderStepped:Connect(function()
-    if Master_Enabled and Lock_Enabled and LockedTarget and LockedTarget.Character then
-        local targetPart = LockedTarget.Character:FindFirstChild(Lock_TargetPart) or LockedTarget.Character:FindFirstChild("HumanoidRootPart")
-        local hp, _ = GetPlayerHealth(LockedTarget)
-        if targetPart and hp > 0 then
-            local targetPos = targetPart.Position
-            if Lock_Prediction then
-                targetPos = targetPos + (targetPart.AssemblyLinearVelocity * 0.12)
-            end
-            local targetCFrame = CFrame.new(Camera.CFrame.Position, targetPos)
-            if Lock_Smoothness then
-                Camera.CFrame = Camera.CFrame:Lerp(targetCFrame, Lock_SmoothAmount)
-            else
-                Camera.CFrame = targetCFrame
-            end
-        else
-            LockedTarget = nil
-        end
-    else
-        LockedTarget = nil
-    end
+d.RenderStepped:Connect(function()
+if k and o and r and r.Character then
+local M=r.Character:FindFirstChild(s)or r.Character:FindFirstChild"HumanoidRootPart"local
+N=GetPlayerHealth(r)
+if M and N>0 then
+local O=M.Position
+if v then
+O=O+(M.AssemblyLinearVelocity*0.12)
+end
+local P=CFrame.new(i.CFrame.Position,O)
+if t then
+i.CFrame=i.CFrame:Lerp(P,u)
+else
+i.CFrame=P
+end
+else
+r=nil
+end
+else
+r=nil
+end
 end)
 
-local MenuGui = Instance.new("ScreenGui")
-MenuGui.Name = "SleekDashboardMenu"
-MenuGui.ResetOnSpawn = false
-MenuGui.Parent = PlayerGui
 
-local MainFrame = Instance.new("Frame")
-MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 680, 0, 440)
-MainFrame.Position = UDim2.new(0.5, -340, 0.5, -220)
-MainFrame.BackgroundColor3 = Color3.fromRGB(11, 12, 16)
-MainFrame.BorderSizePixel = 0
-MainFrame.Visible = false
-MainFrame.Active = true
-MainFrame.Draggable = true
-MainFrame.Parent = MenuGui
 
-local MainCorner = Instance.new("UICorner")
-MainCorner.CornerRadius = UDim.new(0, 10)
-MainCorner.Parent = MainFrame
+local M=25
+local N=35
 
-local Header = Instance.new("Frame")
-Header.Size = UDim2.new(1, 0, 0, 50)
-Header.BackgroundTransparency = 1
-Header.Parent = MainFrame
+local O=Enum.KeyCode.F
+local P=Enum.KeyCode.Zero
+local Q=25
+local R=false
 
-local LogoImg = Instance.new("ImageLabel")
-LogoImg.Size = UDim2.new(0, 24, 0, 24)
-LogoImg.Position = UDim2.new(0, 16, 0.5, -12)
-LogoImg.BackgroundTransparency = 1
-LogoImg.Image = "rbxassetid://74446431285507"
-LogoImg.ScaleType = Enum.ScaleType.Fit
-LogoImg.Parent = Header
+local S=false
+local T=10
+local U=0.7
+local V="HumanoidRootPart"
+local W=true
 
-local TitleLbl = Instance.new("TextLabel")
-TitleLbl.Size = UDim2.new(0, 150, 0, 24)
-TitleLbl.Position = UDim2.new(0, 48, 0.5, -12)
-TitleLbl.BackgroundTransparency = 1
-TitleLbl.Text = "STAT GLOBAL"
-TitleLbl.Font = Enum.Font.GothamBold
-TitleLbl.TextSize = 13
-TitleLbl.TextColor3 = Color3.fromRGB(240, 242, 250)
-TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
-TitleLbl.Parent = Header
-
-local Sidebar = Instance.new("Frame")
-Sidebar.Size = UDim2.new(0, 140, 1, -62)
-Sidebar.Position = UDim2.new(0, 12, 0, 50)
-Sidebar.BackgroundColor3 = Color3.fromRGB(16, 17, 23)
-Sidebar.BorderSizePixel = 0
-Sidebar.Parent = MainFrame
-
-local SideCorner = Instance.new("UICorner")
-SideCorner.CornerRadius = UDim.new(0, 8)
-SideCorner.Parent = Sidebar
-
-local NavLayout = Instance.new("UIListLayout")
-NavLayout.SortOrder = Enum.SortOrder.LayoutOrder
-NavLayout.Padding = UDim.new(0, 4)
-NavLayout.Parent = Sidebar
-
-local NavPadding = Instance.new("UIPadding")
-NavPadding.PaddingTop = UDim.new(0, 8)
-NavPadding.PaddingLeft = UDim.new(0, 6)
-NavPadding.PaddingRight = UDim.new(0, 6)
-NavPadding.Parent = Sidebar
-
-local ContentArea = Instance.new("Frame")
-ContentArea.Size = UDim2.new(1, -172, 1, -62)
-ContentArea.Position = UDim2.new(0, 160, 0, 50)
-ContentArea.BackgroundTransparency = 1
-ContentArea.Parent = MainFrame
-
-local Tabs = {}
-local NavButtons = {}
-
-local function CreateTab(tabName, layoutOrder)
-    local navBtn = Instance.new("TextButton")
-    navBtn.Size = UDim2.new(1, 0, 0, 32)
-    navBtn.BackgroundColor3 = Color3.fromRGB(22, 24, 33)
-    navBtn.BackgroundTransparency = 1
-    navBtn.Text = "  " .. tabName
-    navBtn.Font = Enum.Font.GothamMedium
-    navBtn.TextSize = 12
-    navBtn.TextColor3 = Color3.fromRGB(130, 135, 155)
-    navBtn.TextXAlignment = Enum.TextXAlignment.Left
-    navBtn.LayoutOrder = layoutOrder
-    navBtn.Parent = Sidebar
-
-    local btnCorner = Instance.new("UICorner")
-    btnCorner.CornerRadius = UDim.new(0, 6)
-    btnCorner.Parent = navBtn
-
-    local indicator = Instance.new("Frame")
-    indicator.Size = UDim2.new(0, 3, 0, 16)
-    indicator.Position = UDim2.new(0, 0, 0.5, -8)
-    indicator.BackgroundColor3 = Color3.fromRGB(80, 110, 245)
-    indicator.BorderSizePixel = 0
-    indicator.BackgroundTransparency = 1
-    indicator.Parent = navBtn
-
-    local indCorner = Instance.new("UICorner")
-    indCorner.CornerRadius = UDim.new(0, 2)
-    indCorner.Parent = indicator
-
-    local tabFrame = Instance.new("ScrollingFrame")
-    tabFrame.Size = UDim2.new(1, 0, 1, 0)
-    tabFrame.BackgroundTransparency = 1
-    tabFrame.BorderSizePixel = 0
-    tabFrame.ScrollBarThickness = 2
-    tabFrame.ScrollBarImageColor3 = Color3.fromRGB(45, 50, 70)
-    tabFrame.Visible = false
-    tabFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    tabFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-    tabFrame.Parent = ContentArea
-
-    local colLeft = Instance.new("Frame")
-    colLeft.Size = UDim2.new(0.49, -4, 1, 0)
-    colLeft.BackgroundTransparency = 1
-    colLeft.Parent = tabFrame
-
-    local leftLayout = Instance.new("UIListLayout")
-    leftLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    leftLayout.Padding = UDim.new(0, 10)
-    leftLayout.Parent = colLeft
-
-    local colRight = Instance.new("Frame")
-    colRight.Size = UDim2.new(0.49, -4, 1, 0)
-    colRight.Position = UDim2.new(0.51, 0, 0, 0)
-    colRight.BackgroundTransparency = 1
-    colRight.Parent = tabFrame
-
-    local rightLayout = Instance.new("UIListLayout")
-    rightLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    rightLayout.Padding = UDim.new(0, 10)
-    rightLayout.Parent = colRight
-
-    Tabs[tabName] = {Frame = tabFrame, Left = colLeft, Right = colRight}
-    NavButtons[tabName] = {Btn = navBtn, Indicator = indicator}
-
-    navBtn.MouseButton1Click:Connect(function()
-        for name, data in pairs(Tabs) do
-            local isTarget = (name == tabName)
-            data.Frame.Visible = isTarget
-            local btnData = NavButtons[name]
-            TweenService:Create(btnData.Btn, TweenInfo.new(0.18), {
-                TextColor3 = isTarget and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(130, 135, 155),
-                BackgroundTransparency = isTarget and 0 or 1,
-                BackgroundColor3 = isTarget and Color3.fromRGB(24, 26, 36) or Color3.fromRGB(22, 24, 33)
-            }):Play()
-            TweenService:Create(btnData.Indicator, TweenInfo.new(0.18), {
-                BackgroundTransparency = isTarget and 0 or 1
-            }):Play()
-        end
-    end)
-
-    return colLeft, colRight, tabFrame
-end
-
-local function CreateCard(columnParent, cardTitle)
-    local card = Instance.new("Frame")
-    card.Size = UDim2.new(1, 0, 0, 0)
-    card.AutomaticSize = Enum.AutomaticSize.Y
-    card.BackgroundColor3 = Color3.fromRGB(18, 19, 26)
-    card.Parent = columnParent
-
-    local cardCorner = Instance.new("UICorner")
-    cardCorner.CornerRadius = UDim.new(0, 8)
-    cardCorner.Parent = card
-
-    local cardPadding = Instance.new("UIPadding")
-    cardPadding.PaddingTop = UDim.new(0, 10)
-    cardPadding.PaddingBottom = UDim.new(0, 10)
-    cardPadding.PaddingLeft = UDim.new(0, 12)
-    cardPadding.PaddingRight = UDim.new(0, 12)
-    cardPadding.Parent = card
-
-    local titleLbl = Instance.new("TextLabel")
-    titleLbl.Size = UDim2.new(1, 0, 0, 16)
-    titleLbl.BackgroundTransparency = 1
-    titleLbl.Text = string.upper(cardTitle)
-    titleLbl.Font = Enum.Font.GothamBold
-    titleLbl.TextSize = 10
-    titleLbl.TextColor3 = Color3.fromRGB(120, 125, 145)
-    titleLbl.TextXAlignment = Enum.TextXAlignment.Left
-    titleLbl.Parent = card
-
-    local container = Instance.new("Frame")
-    container.Size = UDim2.new(1, 0, 0, 0)
-    container.Position = UDim2.new(0, 0, 0, 22)
-    container.AutomaticSize = Enum.AutomaticSize.Y
-    container.BackgroundTransparency = 1
-    container.Parent = card
-
-    local layout = Instance.new("UIListLayout")
-    layout.SortOrder = Enum.SortOrder.LayoutOrder
-    layout.Padding = UDim.new(0, 8)
-    layout.Parent = container
-
-    return container
-end
-
-local function CreateToggle(parent, labelText, initialState, callback)
-    local itemFrame = Instance.new("Frame")
-    itemFrame.Size = UDim2.new(1, 0, 0, 24)
-    itemFrame.BackgroundTransparency = 1
-    itemFrame.Parent = parent
-
-    local textLbl = Instance.new("TextLabel")
-    textLbl.Size = UDim2.new(0.65, 0, 1, 0)
-    textLbl.BackgroundTransparency = 1
-    textLbl.Text = labelText
-    textLbl.Font = Enum.Font.GothamMedium
-    textLbl.TextSize = 11
-    textLbl.TextColor3 = Color3.fromRGB(200, 205, 220)
-    textLbl.TextXAlignment = Enum.TextXAlignment.Left
-    textLbl.Parent = itemFrame
-
-    local switchBtn = Instance.new("TextButton")
-    switchBtn.Size = UDim2.new(0, 32, 0, 16)
-    switchBtn.Position = UDim2.new(1, -32, 0.5, -8)
-    switchBtn.BackgroundColor3 = initialState and Color3.fromRGB(80, 110, 245) or Color3.fromRGB(35, 38, 50)
-    switchBtn.Text = ""
-    switchBtn.AutoButtonColor = false
-    switchBtn.Parent = itemFrame
-
-    local switchCorner = Instance.new("UICorner")
-    switchCorner.CornerRadius = UDim.new(1, 0)
-    switchCorner.Parent = switchBtn
-
-    local knob = Instance.new("Frame")
-    knob.Size = UDim2.new(0, 10, 0, 10)
-    knob.Position = initialState and UDim2.new(1, -13, 0.5, -5) or UDim2.new(0, 3, 0.5, -5)
-    knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    knob.Parent = switchBtn
-
-    local knobCorner = Instance.new("UICorner")
-    knobCorner.CornerRadius = UDim.new(1, 0)
-    knobCorner.Parent = knob
-
-    local currState = initialState
-
-    switchBtn.MouseButton1Click:Connect(function()
-        currState = not currState
-        TweenService:Create(switchBtn, TweenInfo.new(0.18), {
-            BackgroundColor3 = currState and Color3.fromRGB(80, 110, 245) or Color3.fromRGB(35, 38, 50)
-        }):Play()
-        TweenService:Create(knob, TweenInfo.new(0.18), {
-            Position = currState and UDim2.new(1, -13, 0.5, -5) or UDim2.new(0, 3, 0.5, -5)
-        }):Play()
-        callback(currState)
-    end)
-
-    return function(newState)
-        currState = newState
-        TweenService:Create(switchBtn, TweenInfo.new(0.18), {
-            BackgroundColor3 = currState and Color3.fromRGB(80, 110, 245) or Color3.fromRGB(35, 38, 50)
-        }):Play()
-        TweenService:Create(knob, TweenInfo.new(0.18), {
-            Position = currState and UDim2.new(1, -13, 0.5, -5) or UDim2.new(0, 3, 0.5, -5)
-        }):Play()
-    end
-end
-
-local function CreateButton(parent, labelText, defaultBtnText, callback)
-    local itemFrame = Instance.new("Frame")
-    itemFrame.Size = UDim2.new(1, 0, 0, 24)
-    itemFrame.BackgroundTransparency = 1
-    itemFrame.Parent = parent
-
-    local textLbl = Instance.new("TextLabel")
-    textLbl.Size = UDim2.new(0.5, 0, 1, 0)
-    textLbl.BackgroundTransparency = 1
-    textLbl.Text = labelText
-    textLbl.Font = Enum.Font.GothamMedium
-    textLbl.TextSize = 11
-    textLbl.TextColor3 = Color3.fromRGB(200, 205, 220)
-    textLbl.TextXAlignment = Enum.TextXAlignment.Left
-    textLbl.Parent = itemFrame
-
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0, 90, 0, 20)
-    btn.Position = UDim2.new(1, -90, 0.5, -10)
-    btn.BackgroundColor3 = Color3.fromRGB(32, 35, 48)
-    btn.Text = defaultBtnText
-    btn.Font = Enum.Font.GothamMedium
-    btn.TextSize = 10
-    btn.TextColor3 = Color3.fromRGB(240, 240, 250)
-    btn.Parent = itemFrame
-
-    local btnCorner = Instance.new("UICorner")
-    btnCorner.CornerRadius = UDim.new(0, 5)
-    btnCorner.Parent = btn
-
-    btn.MouseButton1Click:Connect(function() callback(btn) end)
-end
-
-local visL, visR = CreateTab("Visuals", 1)
-local aimL, aimR = CreateTab("Aimbot", 2)
-local flingL, flingR, flingTabFrame = CreateTab("Player Fling", 3)
-local autoL, autoR = CreateTab("Automation", 4)
-local setL, setR = CreateTab("Settings", 5)
-
-NavButtons["Visuals"].Btn.BackgroundTransparency = 0
-NavButtons["Visuals"].Btn.BackgroundColor3 = Color3.fromRGB(24, 26, 36)
-NavButtons["Visuals"].Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-NavButtons["Visuals"].Indicator.BackgroundTransparency = 0
-Tabs["Visuals"].Frame.Visible = true
-
-local cardESP = CreateCard(visL, "ESP Overlay")
-CreateToggle(cardESP, "Enable ESP", ESP_Enabled, function(s) ESP_Enabled = s RefreshAllESP() end)
-CreateToggle(cardESP, "Show Health", Health_Enabled, function(s) Health_Enabled = s RefreshAllESP() end)
-CreateToggle(cardESP, "Anti-Lag Mode", AntiLag_Enabled, function(s) AntiLag_Enabled = s RefreshAllESP() end)
-
-local cardVisStyle = CreateCard(visR, "Customization")
-CreateButton(cardVisStyle, "Font", FontPresets[currentFontIdx].Name, function(btn)
-    currentFontIdx = (currentFontIdx % #FontPresets) + 1
-    btn.Text = FontPresets[currentFontIdx].Name
-    RefreshAllESP()
+local function KeyCodeFromText(X,Y)
+local Z
+pcall(function()
+Z=Enum.KeyCode[string.upper(X)]
 end)
-CreateButton(cardVisStyle, "Enemy Color", ColorPresets[enemyColorIdx].Name, function(btn)
-    enemyColorIdx = (enemyColorIdx % #ColorPresets) + 1
-    _G.EnemyColor = ColorPresets[enemyColorIdx].Color
-    btn.Text = ColorPresets[enemyColorIdx].Name
-    RefreshAllESP()
+if Z then
+return Z
+end
+return Y
+end
+
+
+
+
+local X=Instance.new"ScreenGui"
+X.Name="SleekDashboardMenu"
+X.ResetOnSpawn=false
+X.ZIndexBehavior=Enum.ZIndexBehavior.Sibling
+X.Parent=H
+
+local Y=Instance.new"Frame"
+Y.Name="MainFrame"
+Y.Size=UDim2.new(0,720,0,500)
+Y.Position=UDim2.new(0.5,-360,0.5,-250)
+Y.BackgroundColor3=Color3.fromRGB(16,17,22)
+Y.BorderSizePixel=0
+Y.Visible=false
+Y.Active=true
+Y.Draggable=true
+Y.Parent=X
+
+local Z=Instance.new"UICorner"
+Z.CornerRadius=UDim.new(0,12)
+Z.Parent=Y
+
+local _=Instance.new"UIStroke"
+_.Color=Color3.fromRGB(34,36,45)
+_.Transparency=0.25
+_.Thickness=1
+_.Parent=Y
+
+local aa=Instance.new"Frame"
+aa.Size=UDim2.new(1,0,0,62)
+aa.BackgroundTransparency=1
+aa.Parent=Y
+
+local ab=Instance.new"Frame"
+ab.Name="SearchFrame"
+ab.Size=UDim2.new(0,300,0,34)
+ab.Position=UDim2.new(0,54,0,14)
+ab.BackgroundColor3=Color3.fromRGB(25,27,34)
+ab.BorderSizePixel=0
+ab.Parent=aa
+
+local ac=Instance.new"UICorner"
+ac.CornerRadius=UDim.new(0,9)
+ac.Parent=ab
+
+local ad=Instance.new"TextLabel"
+ad.Size=UDim2.new(0,28,1,0)
+ad.BackgroundTransparency=1
+ad.Text="⌕"
+ad.Font=Enum.Font.GothamMedium
+ad.TextSize=20
+ad.TextColor3=Color3.fromRGB(115,120,135)
+ad.Parent=ab
+
+local ae=Instance.new"TextBox"
+ae.Name="SearchBox"
+ae.Size=UDim2.new(1,-36,1,0)
+ae.Position=UDim2.new(0,32,0,0)
+ae.BackgroundTransparency=1
+ae.ClearTextOnFocus=false
+ae.PlaceholderText="Search in this tab.."
+ae.PlaceholderColor3=Color3.fromRGB(100,104,118)
+ae.Text=""
+ae.TextColor3=Color3.fromRGB(225,228,238)
+ae.TextSize=12
+ae.Font=Enum.Font.Gotham
+ae.TextXAlignment=Enum.TextXAlignment.Left
+ae.Parent=ab
+
+local af=Instance.new"TextLabel"
+af.Size=UDim2.new(0,120,0,24)
+af.Position=UDim2.new(0,12,0,4)
+af.BackgroundTransparency=1
+af.Text="Script"
+af.Font=Enum.Font.GothamBold
+af.TextSize=13
+af.TextColor3=Color3.fromRGB(235,237,245)
+af.TextXAlignment=Enum.TextXAlignment.Left
+af.Parent=aa
+
+local ag=Instance.new"TextButton"
+ag.Size=UDim2.new(0,34,0,34)
+ag.Position=UDim2.new(1,-48,0,14)
+ag.BackgroundColor3=Color3.fromRGB(28,30,38)
+ag.BorderSizePixel=0
+ag.Text="▪▪\n▪▪"
+ag.TextSize=9
+ag.TextColor3=Color3.fromRGB(215,218,230)
+ag.Font=Enum.Font.GothamBold
+ag.Parent=aa
+
+local ah=Instance.new"UICorner"
+ah.CornerRadius=UDim.new(0,9)
+ah.Parent=ag
+
+local ai=Instance.new"Frame"
+ai.Size=UDim2.new(0,48,1,-76)
+ai.Position=UDim2.new(0,10,0,66)
+ai.BackgroundColor3=Color3.fromRGB(19,20,26)
+ai.BorderSizePixel=0
+ai.Parent=Y
+
+local aj=Instance.new"UICorner"
+aj.CornerRadius=UDim.new(0,10)
+aj.Parent=ai
+
+local ak=Instance.new"UIListLayout"
+ak.SortOrder=Enum.SortOrder.LayoutOrder
+ak.Padding=UDim.new(0,7)
+ak.HorizontalAlignment=Enum.HorizontalAlignment.Center
+ak.Parent=ai
+
+local al=Instance.new"UIPadding"
+al.PaddingTop=UDim.new(0,8)
+al.Parent=ai
+
+local am=Instance.new"Frame"
+am.Size=UDim2.new(1,-72,1,-76)
+am.Position=UDim2.new(0,68,0,66)
+am.BackgroundTransparency=1
+am.Parent=Y
+
+local an={}
+local ao={}
+local ap={}
+local aq
+local ar
+
+local function RegisterSearchItem(as,at,au,av)
+local aw={
+Text=string.lower(tostring(as)),
+DisplayText=tostring(as),
+Tab=at,
+Frame=au,
+Card=av
+}
+table.insert(ap,aw)
+return aw
+end
+
+local function SetTab(as)
+aq=as
+for at,au in pairs(an)do
+local av=at==as
+au.Frame.Visible=av and ae.Text==""
+local aw=ao[at]
+if aw then
+c:Create(aw.Btn,TweenInfo.new(0.16),{
+BackgroundColor3=av and Color3.fromRGB(43,48,67)or Color3.fromRGB(25,27,34),
+TextColor3=av and Color3.fromRGB(255,255,255)or Color3.fromRGB(110,115,132)
+}):Play()
+c:Create(aw.Icon,TweenInfo.new(0.16),{
+TextColor3=av and Color3.fromRGB(255,255,255)or Color3.fromRGB(110,115,132)
+}):Play()
+end
+end
+end
+
+local function ClearSearchResults()
+if not ar then return end
+for as,at in ipairs(ar:GetChildren())do
+if at:IsA"GuiObject"then
+at:Destroy()
+end
+end
+end
+
+local function RunSearch(as)
+as=string.lower(as or"")
+ClearSearchResults()
+
+if as==""then
+if ar then ar.Visible=false end
+if aq and an[aq]then
+an[aq].Frame.Visible=true
+end
+return
+end
+
+for at,au in pairs(an)do
+au.Frame.Visible=false
+end
+if not ar then return end
+ar.Visible=true
+
+local at=0
+for au,av in ipairs(ap)do
+if string.find(av.Text,as,1,true)or string.find(string.lower(av.Tab),as,1,true)then
+at+=1
+local aw=Instance.new"TextButton"
+aw.Size=UDim2.new(1,-4,0,42)
+aw.BackgroundColor3=Color3.fromRGB(25,27,34)
+aw.BorderSizePixel=0
+aw.Text=""
+aw.AutoButtonColor=false
+aw.Parent=ar
+
+local ax=Instance.new"UICorner"
+ax.CornerRadius=UDim.new(0,8)
+ax.Parent=aw
+
+local ay=Instance.new"TextLabel"
+ay.Size=UDim2.new(1,-18,0,19)
+ay.Position=UDim2.new(0,10,0,5)
+ay.BackgroundTransparency=1
+ay.Text=av.DisplayText
+ay.Font=Enum.Font.GothamMedium
+ay.TextSize=11
+ay.TextColor3=Color3.fromRGB(225,228,238)
+ay.TextXAlignment=Enum.TextXAlignment.Left
+ay.Parent=aw
+
+local az=Instance.new"TextLabel"
+az.Size=UDim2.new(1,-18,0,14)
+az.Position=UDim2.new(0,10,0,24)
+az.BackgroundTransparency=1
+az.Text=av.Tab
+az.Font=Enum.Font.Gotham
+az.TextSize=9
+az.TextColor3=Color3.fromRGB(110,115,132)
+az.TextXAlignment=Enum.TextXAlignment.Left
+az.Parent=aw
+
+aw.MouseButton1Click:Connect(function()
+ae.Text=""
+SetTab(av.Tab)
+task.defer(function()
+if av.Frame and av.Frame.Parent then
+
+end
+end)
+end)
+end
+end
+
+if at==0 then
+local au=Instance.new"TextLabel"
+au.Size=UDim2.new(1,0,0,40)
+au.BackgroundTransparency=1
+au.Text="No settings found"
+au.Font=Enum.Font.GothamMedium
+au.TextSize=12
+au.TextColor3=Color3.fromRGB(110,115,132)
+au.Parent=ar
+end
+end
+
+local function CreateTab(as,at,au)
+local av=Instance.new"TextButton"
+av.Name=as.."Nav"
+av.Size=UDim2.new(0,38,0,38)
+av.BackgroundColor3=Color3.fromRGB(25,27,34)
+av.BorderSizePixel=0
+av.Text=""
+av.AutoButtonColor=false
+av.LayoutOrder=at
+av.Parent=ai
+
+local aw=Instance.new"UICorner"
+aw.CornerRadius=UDim.new(0,9)
+aw.Parent=av
+
+local ax=Instance.new"TextLabel"
+ax.Size=UDim2.new(1,0,1,0)
+ax.BackgroundTransparency=1
+ax.Text=au or"•"
+ax.Font=Enum.Font.GothamBold
+ax.TextSize=16
+ax.TextColor3=Color3.fromRGB(110,115,132)
+ax.Parent=av
+
+local ay=Instance.new"ScrollingFrame"
+ay.Name=as.."Tab"
+ay.Size=UDim2.new(1,0,1,0)
+ay.BackgroundTransparency=1
+ay.BorderSizePixel=0
+ay.ScrollBarThickness=2
+ay.ScrollBarImageColor3=Color3.fromRGB(58,62,82)
+ay.Visible=false
+ay.AutomaticCanvasSize=Enum.AutomaticSize.Y
+ay.CanvasSize=UDim2.new(0,0,0,0)
+ay.Parent=am
+
+local az=Instance.new"Frame"
+az.Name="LeftColumn"
+az.Size=UDim2.new(0.49,-5,1,0)
+az.BackgroundTransparency=1
+az.Parent=ay
+
+local aA=Instance.new"UIListLayout"
+aA.SortOrder=Enum.SortOrder.LayoutOrder
+aA.Padding=UDim.new(0,10)
+aA.Parent=az
+
+local aB=Instance.new"Frame"
+aB.Name="RightColumn"
+aB.Size=UDim2.new(0.49,-5,1,0)
+aB.Position=UDim2.new(0.51,0,0,0)
+aB.BackgroundTransparency=1
+aB.Parent=ay
+
+local aC=Instance.new"UIListLayout"
+aC.SortOrder=Enum.SortOrder.LayoutOrder
+aC.Padding=UDim.new(0,10)
+aC.Parent=aB
+
+an[as]={Frame=ay,Left=az,Right=aB}
+ao[as]={Btn=av,Icon=ax}
+
+av.MouseButton1Click:Connect(function()
+ae.Text=""
+SetTab(as)
 end)
 
-local cardAimMain = CreateCard(aimL, "Lock Settings")
-CreateToggle(cardAimMain, "Enable Lock", Lock_Enabled, function(s) Lock_Enabled = s if not s then LockedTarget = nil end end)
-CreateToggle(cardAimMain, "Exclude Friends", not Lock_Friends, function(s) Lock_Friends = not s end)
-CreateToggle(cardAimMain, "Target Head", Lock_TargetPart == "Head", function(s) Lock_TargetPart = s and "Head" or "HumanoidRootPart" end)
+return az,aB,ay
+end
 
-local cardAimExtra = CreateCard(aimR, "Behavior")
-CreateToggle(cardAimExtra, "Smoothness", Lock_Smoothness, function(s) Lock_Smoothness = s end)
-CreateToggle(cardAimExtra, "Prediction", Lock_Prediction, function(s) Lock_Prediction = s end)
+local function CreateCard(as,at,au)
+local av=Instance.new"Frame"
+av.Name="Card_"..string.gsub(at,"%s+","_")
+av.Size=UDim2.new(1,0,0,0)
+av.AutomaticSize=Enum.AutomaticSize.Y
+av.BackgroundColor3=Color3.fromRGB(24,25,31)
+av.BorderSizePixel=0
+av.Parent=as
 
-flingL.Size = UDim2.new(1, 0, 1, 0)
-flingR.Visible = false
+local aw=Instance.new"UICorner"
+aw.CornerRadius=UDim.new(0,9)
+aw.Parent=av
 
-local cardFlingTarget = CreateCard(flingL, "Select Target Player")
+local ax=Instance.new"UIPadding"
+ax.PaddingTop=UDim.new(0,12)
+ax.PaddingBottom=UDim.new(0,12)
+ax.PaddingLeft=UDim.new(0,12)
+ax.PaddingRight=UDim.new(0,12)
+ax.Parent=av
 
-local FlingListScroll = Instance.new("ScrollingFrame")
-FlingListScroll.Size = UDim2.new(1, 0, 0, 210)
-FlingListScroll.BackgroundTransparency = 1
-FlingListScroll.BorderSizePixel = 0
-FlingListScroll.ScrollBarThickness = 2
-FlingListScroll.ScrollBarImageColor3 = Color3.fromRGB(45, 50, 70)
-FlingListScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-FlingListScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-FlingListScroll.Parent = cardFlingTarget
+local ay=Instance.new"TextLabel"
+ay.Name="Title"
+ay.Size=UDim2.new(1,0,0,16)
+ay.BackgroundTransparency=1
+ay.Text=at
+ay.Font=Enum.Font.GothamBold
+ay.TextSize=12
+ay.TextColor3=Color3.fromRGB(235,237,245)
+ay.TextXAlignment=Enum.TextXAlignment.Left
+ay.Parent=av
 
-local FlingListLayout = Instance.new("UIListLayout")
-FlingListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-FlingListLayout.Padding = UDim.new(0, 4)
-FlingListLayout.Parent = FlingListScroll
+local az=Instance.new"Frame"
+az.Name="Container"
+az.Size=UDim2.new(1,0,0,0)
+az.Position=UDim2.new(0,0,0,23)
+az.AutomaticSize=Enum.AutomaticSize.Y
+az.BackgroundTransparency=1
+az.Parent=av
 
-local TargetStatusCard = Instance.new("Frame")
-TargetStatusCard.Size = UDim2.new(1, 0, 0, 42)
-TargetStatusCard.BackgroundColor3 = Color3.fromRGB(24, 26, 36)
-TargetStatusCard.Parent = cardFlingTarget
+local aA=Instance.new"UIListLayout"
+aA.SortOrder=Enum.SortOrder.LayoutOrder
+aA.Padding=UDim.new(0,8)
+aA.Parent=az
 
-local TargetCorner = Instance.new("UICorner")
-TargetCorner.CornerRadius = UDim.new(0, 6)
-TargetCorner.Parent = TargetStatusCard
+RegisterSearchItem(at,au,av,av)
+return az,av
+end
 
-local TargetInfoLbl = Instance.new("TextLabel")
-TargetInfoLbl.Size = UDim2.new(0.65, 0, 1, 0)
-TargetInfoLbl.Position = UDim2.new(0, 10, 0, 0)
-TargetInfoLbl.BackgroundTransparency = 1
-TargetInfoLbl.Text = "Selected: None"
-TargetInfoLbl.Font = Enum.Font.GothamMedium
-TargetInfoLbl.TextSize = 11
-TargetInfoLbl.TextColor3 = Color3.fromRGB(180, 185, 205)
-TargetInfoLbl.TextXAlignment = Enum.TextXAlignment.Left
-TargetInfoLbl.Parent = TargetStatusCard
+local function CreateToggle(as,at,au,av,aw,ax)
+local ay=Instance.new"Frame"
+ay.Name="Setting_"..string.gsub(at,"%s+","_")
+ay.Size=UDim2.new(1,0,0,28)
+ay.BackgroundTransparency=1
+ay.Parent=as
 
-local FlingActionBtn = Instance.new("TextButton")
-FlingActionBtn.Size = UDim2.new(0, 100, 0, 26)
-FlingActionBtn.Position = UDim2.new(1, -108, 0.5, -13)
-FlingActionBtn.BackgroundColor3 = Color3.fromRGB(80, 110, 245)
-FlingActionBtn.Text = "START FLING"
-FlingActionBtn.Font = Enum.Font.GothamBold
-FlingActionBtn.TextSize = 10
-FlingActionBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-FlingActionBtn.Parent = TargetStatusCard
+local az=Instance.new"TextLabel"
+az.Size=UDim2.new(0.72,0,1,0)
+az.BackgroundTransparency=1
+az.Text=at
+az.Font=Enum.Font.GothamMedium
+az.TextSize=11
+az.TextColor3=Color3.fromRGB(205,208,220)
+az.TextXAlignment=Enum.TextXAlignment.Left
+az.Parent=ay
 
-local FlingActionCorner = Instance.new("UICorner")
-FlingActionCorner.CornerRadius = UDim.new(0, 6)
-FlingActionCorner.Parent = FlingActionBtn
+local aA=Instance.new"TextButton"
+aA.Size=UDim2.new(0,32,0,17)
+aA.Position=UDim2.new(1,-32,0.5,-8)
+aA.BackgroundColor3=au and Color3.fromRGB(73,91,245)or Color3.fromRGB(43,45,55)
+aA.BorderSizePixel=0
+aA.Text=""
+aA.AutoButtonColor=false
+aA.Parent=ay
+
+local aB=Instance.new"UICorner"
+aB.CornerRadius=UDim.new(1,0)
+aB.Parent=aA
+
+local aC=Instance.new"Frame"
+aC.Size=UDim2.new(0,11,0,11)
+aC.Position=au and UDim2.new(1,-14,0.5,-5.5)or UDim2.new(0,3,0.5,-5.5)
+aC.BackgroundColor3=Color3.fromRGB(238,240,246)
+aC.BorderSizePixel=0
+aC.Parent=aA
+
+local aD=Instance.new"UICorner"
+aD.CornerRadius=UDim.new(1,0)
+aD.Parent=aC
+
+local aE=au
+
+aA.MouseButton1Click:Connect(function()
+aE=not aE
+c:Create(aA,TweenInfo.new(0.16),{
+BackgroundColor3=aE and Color3.fromRGB(73,91,245)or Color3.fromRGB(43,45,55)
+}):Play()
+c:Create(aC,TweenInfo.new(0.16),{
+Position=aE and UDim2.new(1,-14,0.5,-5.5)or UDim2.new(0,3,0.5,-5.5)
+}):Play()
+av(aE)
+end)
+
+RegisterSearchItem(at,aw,ay,ax)
+
+return function(aF)
+aE=aF
+c:Create(aA,TweenInfo.new(0.16),{
+BackgroundColor3=aE and Color3.fromRGB(73,91,245)or Color3.fromRGB(43,45,55)
+}):Play()
+c:Create(aC,TweenInfo.new(0.16),{
+Position=aE and UDim2.new(1,-14,0.5,-5.5)or UDim2.new(0,3,0.5,-5.5)
+}):Play()
+end
+end
+
+local function CreateButton(as,at,au,av,aw,ax)
+local ay=Instance.new"Frame"
+ay.Name="Setting_"..string.gsub(at,"%s+","_")
+ay.Size=UDim2.new(1,0,0,28)
+ay.BackgroundTransparency=1
+ay.Parent=as
+
+local az=Instance.new"TextLabel"
+az.Size=UDim2.new(0.55,0,1,0)
+az.BackgroundTransparency=1
+az.Text=at
+az.Font=Enum.Font.GothamMedium
+az.TextSize=11
+az.TextColor3=Color3.fromRGB(205,208,220)
+az.TextXAlignment=Enum.TextXAlignment.Left
+az.Parent=ay
+
+local aA=Instance.new"TextButton"
+aA.Size=UDim2.new(0,102,0,22)
+aA.Position=UDim2.new(1,-102,0.5,-11)
+aA.BackgroundColor3=Color3.fromRGB(37,40,51)
+aA.BorderSizePixel=0
+aA.Text=au
+aA.Font=Enum.Font.GothamMedium
+aA.TextSize=10
+aA.TextColor3=Color3.fromRGB(235,237,245)
+aA.AutoButtonColor=false
+aA.Parent=ay
+
+local aB=Instance.new"UICorner"
+aB.CornerRadius=UDim.new(0,6)
+aB.Parent=aA
+
+aA.MouseEnter:Connect(function()
+c:Create(aA,TweenInfo.new(0.12),{BackgroundColor3=Color3.fromRGB(48,52,66)}):Play()
+end)
+aA.MouseLeave:Connect(function()
+c:Create(aA,TweenInfo.new(0.12),{BackgroundColor3=Color3.fromRGB(37,40,51)}):Play()
+end)
+aA.MouseButton1Click:Connect(function()
+av(aA)
+end)
+
+RegisterSearchItem(at,aw,ay,ax)
+return aA
+end
+
+local as,at=CreateTab("Visuals",1,"◉")
+local au,av=CreateTab("Aimbot",2,"⌖")local
+aw, ax=CreateTab("Player Fling",3,"✦")
+local ay,az=CreateTab("Automation",4,"↯")
+local aA,aB=CreateTab("Macro",5,"⌁")
+local aC,aD=CreateTab("Hitbox",6,"□")
+local aE,aF=CreateTab("Settings",7,"⚙")
+
+ar=Instance.new"ScrollingFrame"
+ar.Name="SearchResults"
+ar.Size=UDim2.new(1,0,1,0)
+ar.BackgroundTransparency=1
+ar.BorderSizePixel=0
+ar.ScrollBarThickness=2
+ar.ScrollBarImageColor3=Color3.fromRGB(58,62,82)
+ar.AutomaticCanvasSize=Enum.AutomaticSize.Y
+ar.CanvasSize=UDim2.new(0,0,0,0)
+ar.Visible=false
+ar.Parent=am
+
+local aG=Instance.new"UIListLayout"
+aG.SortOrder=Enum.SortOrder.LayoutOrder
+aG.Padding=UDim.new(0,7)
+aG.Parent=ar
+
+ae:GetPropertyChangedSignal"Text":Connect(function()
+RunSearch(ae.Text)
+end)
+
+ag.MouseButton1Click:Connect(function()
+Y.Visible=not Y.Visible
+end)
+
+
+local aH=CreateCard(as,"ESP","Visuals")
+CreateToggle(aH,"Enabled",l,function(aI)l=aI RefreshAllESP()end,"Visuals",aH)
+CreateToggle(aH,"Show Health",m,function(aI)m=aI RefreshAllESP()end,"Visuals",aH)
+CreateToggle(aH,"Anti-Lag",n,function(aI)n=aI RefreshAllESP()end,"Visuals",aH)
+
+local aI=CreateCard(at,"Customization","Visuals")
+CreateButton(aI,"Font",B[C].Name,function(aJ)
+C=(C%#B)+1
+aJ.Text=B[C].Name
+RefreshAllESP()
+end,"Visuals",aI)
+CreateButton(aI,"Enemy Color",D[E].Name,function(aJ)
+E=(E%#D)+1
+_G.EnemyColor=D[E].Color
+aJ.Text=D[E].Name
+RefreshAllESP()
+end,"Visuals",aI)
+
+
+local aJ=CreateCard(au,"Aim","Aimbot")
+CreateToggle(aJ,"Aim Assist",o,function(aK)o=aK if not aK then r=nil end end,"Aimbot",aJ)
+CreateToggle(aJ,"Exclude Friends",not p,function(aK)p=not aK end,"Aimbot",aJ)
+CreateToggle(aJ,"Target Head",s=="Head",function(aK)s=aK and"Head"or"HumanoidRootPart"end,"Aimbot",aJ)
+
+local aK=CreateCard(av,"Behavior","Aimbot")
+CreateToggle(aK,"Smoothness",t,function(aL)t=aL end,"Aimbot",aK)
+CreateToggle(aK,"Prediction",v,function(aL)v=aL end,"Aimbot",aK)
+
+
+aw.Size=UDim2.new(1,0,1,0)
+ax.Visible=false
+local aL=CreateCard(aw,"Select Target Player","Player Fling")
+
+local aM=Instance.new"ScrollingFrame"
+aM.Size=UDim2.new(1,0,0,210)
+aM.BackgroundTransparency=1
+aM.BorderSizePixel=0
+aM.ScrollBarThickness=2
+aM.ScrollBarImageColor3=Color3.fromRGB(58,62,82)
+aM.AutomaticCanvasSize=Enum.AutomaticSize.Y
+aM.CanvasSize=UDim2.new(0,0,0,0)
+aM.Parent=aL
+
+local aN=Instance.new"UIListLayout"
+aN.SortOrder=Enum.SortOrder.LayoutOrder
+aN.Padding=UDim.new(0,4)
+aN.Parent=aM
+
+local aO=Instance.new"Frame"
+aO.Size=UDim2.new(1,0,0,42)
+aO.BackgroundColor3=Color3.fromRGB(30,32,40)
+aO.BorderSizePixel=0
+aO.Parent=aL
+
+local aP=Instance.new"UICorner"
+aP.CornerRadius=UDim.new(0,7)
+aP.Parent=aO
+
+local aQ=Instance.new"TextLabel"
+aQ.Size=UDim2.new(0.65,0,1,0)
+aQ.Position=UDim2.new(0,10,0,0)
+aQ.BackgroundTransparency=1
+aQ.Text="Selected: None"
+aQ.Font=Enum.Font.GothamMedium
+aQ.TextSize=11
+aQ.TextColor3=Color3.fromRGB(180,185,205)
+aQ.TextXAlignment=Enum.TextXAlignment.Left
+aQ.Parent=aO
+
+local aR=Instance.new"TextButton"
+aR.Size=UDim2.new(0,100,0,26)
+aR.Position=UDim2.new(1,-108,0.5,-13)
+aR.BackgroundColor3=Color3.fromRGB(73,91,245)
+aR.BorderSizePixel=0
+aR.Text="START FLING"
+aR.Font=Enum.Font.GothamBold
+aR.TextSize=10
+aR.TextColor3=Color3.fromRGB(255,255,255)
+aR.Parent=aO
+
+local aS=Instance.new"UICorner"
+aS.CornerRadius=UDim.new(0,6)
+aS.Parent=aR
 
 local function RefreshFlingPlayerList()
-    for _, child in ipairs(FlingListScroll:GetChildren()) do
-        if child:IsA("Frame") then child:Destroy() end
-    end
-
-    for _, p in ipairs(Players:GetPlayers()) do
-        if p ~= LocalPlayer then
-            local item = Instance.new("Frame")
-            item.Size = UDim2.new(1, 0, 0, 32)
-            item.BackgroundColor3 = (SelectedFlingTarget == p) and Color3.fromRGB(30, 35, 52) or Color3.fromRGB(14, 15, 21)
-            item.Parent = FlingListScroll
-
-            local itemCorner = Instance.new("UICorner")
-            itemCorner.CornerRadius = UDim.new(0, 5)
-            itemCorner.Parent = item
-
-            local avatarImg = Instance.new("ImageLabel")
-            avatarImg.Size = UDim2.new(0, 24, 0, 24)
-            avatarImg.Position = UDim2.new(0, 5, 0.5, -12)
-            avatarImg.BackgroundTransparency = 1
-            avatarImg.Image = "rbxthumb://type=AvatarHeadShot&id=" .. p.UserId .. "&w=48&h=48"
-            avatarImg.Parent = item
-
-            local nameLabel = Instance.new("TextLabel")
-            nameLabel.Size = UDim2.new(1, -110, 1, 0)
-            nameLabel.Position = UDim2.new(0, 35, 0, 0)
-            nameLabel.BackgroundTransparency = 1
-            nameLabel.Text = p.DisplayName .. " (@" .. p.Name .. ")"
-            nameLabel.Font = Enum.Font.GothamMedium
-            nameLabel.TextSize = 11
-            nameLabel.TextColor3 = Color3.fromRGB(210, 215, 230)
-            nameLabel.TextXAlignment = Enum.TextXAlignment.Left
-            nameLabel.Parent = item
-
-            local selectBtn = Instance.new("TextButton")
-            selectBtn.Size = UDim2.new(0, 65, 0, 20)
-            selectBtn.Position = UDim2.new(1, -70, 0.5, -10)
-            selectBtn.BackgroundColor3 = Color3.fromRGB(35, 38, 52)
-            selectBtn.Text = (SelectedFlingTarget == p) and "Selected" or "Select"
-            selectBtn.Font = Enum.Font.Gotham
-            selectBtn.TextSize = 10
-            selectBtn.TextColor3 = Color3.fromRGB(230, 230, 245)
-            selectBtn.Parent = item
-
-            local selectCorner = Instance.new("UICorner")
-            selectCorner.CornerRadius = UDim.new(0, 4)
-            selectCorner.Parent = selectBtn
-
-            selectBtn.MouseButton1Click:Connect(function()
-                SelectedFlingTarget = p
-                TargetInfoLbl.Text = "Selected: " .. p.DisplayName
-                RefreshFlingPlayerList()
-            end)
-        end
-    end
+for aT,aU in ipairs(aM:GetChildren())do
+if aU:IsA"Frame"then aU:Destroy()end
 end
 
-FlingActionBtn.MouseButton1Click:Connect(function()
-    if not SelectedFlingTarget then return end
-    Fling_Active = not Fling_Active
-    if Fling_Active then
-        FlingActionBtn.Text = "STOP FLING"
-        FlingActionBtn.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
-    else
-        FlingActionBtn.Text = "START FLING"
-        FlingActionBtn.BackgroundColor3 = Color3.fromRGB(80, 110, 245)
-    end
+for aT,aU in ipairs(a:GetPlayers())do
+if aU~=g then
+local aV=Instance.new"Frame"
+aV.Size=UDim2.new(1,0,0,32)
+aV.BackgroundColor3=(A==aU)and Color3.fromRGB(30,35,52)or Color3.fromRGB(22,23,29)
+aV.BorderSizePixel=0
+aV.Parent=aM
+
+local aW=Instance.new"UICorner"
+aW.CornerRadius=UDim.new(0,5)
+aW.Parent=aV
+
+local aX=Instance.new"ImageLabel"
+aX.Size=UDim2.new(0,24,0,24)
+aX.Position=UDim2.new(0,5,0.5,-12)
+aX.BackgroundTransparency=1
+aX.Image="rbxthumb://type=AvatarHeadShot&id="..aU.UserId.."&w=48&h=48"
+aX.Parent=aV
+
+local aY=Instance.new"TextLabel"
+aY.Size=UDim2.new(1,-110,1,0)
+aY.Position=UDim2.new(0,35,0,0)
+aY.BackgroundTransparency=1
+aY.Text=aU.DisplayName.." (@"..aU.Name..")"
+aY.Font=Enum.Font.GothamMedium
+aY.TextSize=11
+aY.TextColor3=Color3.fromRGB(210,215,230)
+aY.TextXAlignment=Enum.TextXAlignment.Left
+aY.Parent=aV
+
+local aZ=Instance.new"TextButton"
+aZ.Size=UDim2.new(0,65,0,20)
+aZ.Position=UDim2.new(1,-70,0.5,-10)
+aZ.BackgroundColor3=Color3.fromRGB(35,38,52)
+aZ.BorderSizePixel=0
+aZ.Text=(A==aU)and"Selected"or"Select"
+aZ.Font=Enum.Font.Gotham
+aZ.TextSize=10
+aZ.TextColor3=Color3.fromRGB(230,230,245)
+aZ.Parent=aV
+
+local a_=Instance.new"UICorner"
+a_.CornerRadius=UDim.new(0,4)
+a_.Parent=aZ
+
+aZ.MouseButton1Click:Connect(function()
+A=aU
+aQ.Text="Selected: "..aU.DisplayName
+RefreshFlingPlayerList()
+end)
+end
+end
+end
+
+aR.MouseButton1Click:Connect(function()
+if not A then return end
+z=not z
+if z then
+aR.Text="STOP FLING"
+aR.BackgroundColor3=Color3.fromRGB(220,60,60)
+else
+aR.Text="START FLING"
+aR.BackgroundColor3=Color3.fromRGB(73,91,245)
+end
 end)
 
-Players.PlayerAdded:Connect(RefreshFlingPlayerList)
-Players.PlayerRemoving:Connect(function(p)
-    if SelectedFlingTarget == p then
-        SelectedFlingTarget = nil
-        Fling_Active = false
-        TargetInfoLbl.Text = "Selected: None"
-        FlingActionBtn.Text = "START FLING"
-        FlingActionBtn.BackgroundColor3 = Color3.fromRGB(80, 110, 245)
-    end
-    RefreshFlingPlayerList()
+a.PlayerAdded:Connect(RefreshFlingPlayerList)
+a.PlayerRemoving:Connect(function(aT)
+if A==aT then
+A=nil
+z=false
+aQ.Text="Selected: None"
+aR.Text="START FLING"
+aR.BackgroundColor3=Color3.fromRGB(73,91,245)
+end
+RefreshFlingPlayerList()
 end)
 RefreshFlingPlayerList()
 
 
-local AutoClick_MinDelay = 25
-local AutoClick_MaxDelay = 35
+local aT=CreateCard(ay,"Automation","Automation")
+local aU=CreateToggle(aT,"Auto Clicker",w,function(aU)w=aU end,"Automation",aT)
+CreateToggle(aT,"Random Offset",x,function(aV)x=aV end,"Automation",aT)
 
-local cardAutoMain = CreateCard(autoL, "Auto Clicker Controls")
-local autoToggleUpdater = CreateToggle(cardAutoMain, "Auto Clicker (25ms)", AutoClick_Enabled, function(s) AutoClick_Enabled = s end)
-CreateToggle(cardAutoMain, "Random Offset (+-35ms)", AutoClick_RandomOffset, function(s) AutoClick_RandomOffset = s end)
-
-
-local cardAutoSpeed = CreateCard(autoR, "Speed Settings")
-
-
-local customSpeedBtn = CreateButton(cardAutoSpeed, "Custom Speed", tostring(AutoClick_MinDelay) .. "ms", function(btn)
-    local popup = Instance.new("TextBox")
-    popup.Size = UDim2.new(0, 100, 0, 25)
-    popup.Position = UDim2.new(1, -100, 0, 0)
-    popup.BackgroundColor3 = Color3.fromRGB(30, 32, 44)
-    popup.TextColor3 = Color3.fromRGB(255, 255, 255)
-    popup.Text = tostring(AutoClick_MinDelay)
-    popup.ClearTextOnFocus = false
-    popup.Font = Enum.Font.GothamMedium
-    popup.TextSize = 10
-    popup.Parent = btn.Parent
-
-    popup.FocusLost:Connect(function()
-        local val = tonumber(popup.Text)
-        if val then
-           
-            AutoClick_MinDelay = math.max(0, val)
-            AutoClick_MaxDelay = AutoClick_MinDelay + 10
-            btn.Text = tostring(AutoClick_MinDelay) .. "ms"
-        end
-        popup:Destroy()
-    end)
-end)
-
-
-CreateButton(cardAutoSpeed, "Reset to Default", "25 - 35ms", function(btn)
-    AutoClick_MinDelay = 25
-    AutoClick_MaxDelay = 35
-    
-
-    if customSpeedBtn then
-        customSpeedBtn.Text = "25ms"
-    end
-end)
-
-
-
-local cardProtect = CreateCard(setL, "Protection")
-CreateToggle(cardProtect, "Anti-Fling Protection", AntiFling_Enabled, function(s) AntiFling_Enabled = s end)
-
-local cardSystem = CreateCard(setR, "System")
-CreateToggle(cardSystem, "Master Switch", Master_Enabled, function(s)
-    Master_Enabled = s
-    if not s then LockedTarget = nil Fling_Active = false end
-    RefreshAllESP()
-end)
-
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-
-    if input.KeyCode == Enum.KeyCode.E then
-        AutoClick_Enabled = not AutoClick_Enabled
-        autoToggleUpdater(AutoClick_Enabled)
-    elseif input.KeyCode == Lock_Key then
-        if not Master_Enabled or not Lock_Enabled then return end
-        if LockedTarget then LockedTarget = nil else LockedTarget = GetClosestTarget() end
-    elseif input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl then
-        MainFrame.Visible = not MainFrame.Visible
-    end
-end)
-
-local macroL, macroR = CreateTab("Macro", 5)
-
-
-NavButtons["Settings"].Btn.LayoutOrder = 6
-
-local Macro_Key = Enum.KeyCode.F
-local Macro_ToggleKey = Enum.KeyCode.Zero
-local Macro_Delay = 25
-local Macro_Enabled = false
-
-local function KeyCodeFromText(text, fallback)
-    local key
-    pcall(function()
-        key = Enum.KeyCode[string.upper(text)]
-    end)
-
-    if key then
-        return key
-    end
-
-    return fallback
+local aV=CreateCard(az,"Speed Settings","Automation")
+local aW=CreateButton(aV,"Custom Speed",tostring(M).."ms",function(aW)
+local aX=Instance.new"TextBox"
+aX.Size=UDim2.new(0,100,0,25)
+aX.Position=UDim2.new(1,-100,0,0)
+aX.BackgroundColor3=Color3.fromRGB(30,32,44)
+aX.TextColor3=Color3.fromRGB(255,255,255)
+aX.Text=tostring(M)
+aX.ClearTextOnFocus=false
+aX.Font=Enum.Font.GothamMedium
+aX.TextSize=10
+aX.Parent=aW.Parent
+aX.FocusLost:Connect(function()
+local aY=tonumber(aX.Text)
+if aY then
+M=math.max(0,aY)
+N=M+10
+aW.Text=tostring(M).."ms"
 end
+aX:Destroy()
+end)
+end,"Automation",aV)
 
-local macroControls = CreateCard(macroL, "Macro Controls")
+CreateButton(aV,"Reset to Default","25 - 35ms",function(aX)
+M=25
+N=35
+if aW then aW.Text="25ms"end
+end,"Automation",aV)
 
-CreateButton(macroControls, "Macro Key", Macro_Key.Name, function(btn)
-    local current = Macro_Key.Name
 
-    local popup = Instance.new("TextBox")
-    popup.Size = UDim2.new(0, 100, 0, 25)
-    popup.Position = UDim2.new(1, -100, 0, 0)
-    popup.BackgroundColor3 = Color3.fromRGB(30, 32, 44)
-    popup.TextColor3 = Color3.fromRGB(255, 255, 255)
-    popup.Text = current
-    popup.ClearTextOnFocus = false
-    popup.Font = Enum.Font.GothamMedium
-    popup.TextSize = 10
-    popup.Parent = btn.Parent
+local aX=CreateCard(aE,"Protection","Settings")
+CreateToggle(aX,"Anti-Fling Protection",y,function(aY)y=aY end,"Settings",aX)
 
-    popup.FocusLost:Connect(function()
-        Macro_Key = KeyCodeFromText(popup.Text, Macro_Key)
-        btn.Text = Macro_Key.Name
-        popup:Destroy()
-    end)
+local aY=CreateCard(aF,"System","Settings")
+CreateToggle(aY,"Master Switch",k,function(aZ)
+k=aZ
+if not aZ then r=nil z=false end
+RefreshAllESP()
+end,"Settings",aY)
+
+
+local aZ=CreateCard(aA,"Macro Controls","Macro")
+CreateButton(aZ,"Macro Key",O.Name,function(a_)
+local a0=O.Name
+local a1=Instance.new"TextBox"
+a1.Size=UDim2.new(0,100,0,25)
+a1.Position=UDim2.new(1,-100,0,0)
+a1.BackgroundColor3=Color3.fromRGB(30,32,44)
+a1.TextColor3=Color3.fromRGB(255,255,255)
+a1.Text=a0
+a1.ClearTextOnFocus=false
+a1.Font=Enum.Font.GothamMedium
+a1.TextSize=10
+a1.Parent=a_.Parent
+a1.FocusLost:Connect(function()
+O=KeyCodeFromText(a1.Text,O)
+a_.Text=O.Name
+a1:Destroy()
+end)
+end,"Macro",aZ)
+
+CreateButton(aZ,"Toggle Key",P.Name,function(a_)
+local a0=P.Name
+local a1=Instance.new"TextBox"
+a1.Size=UDim2.new(0,100,0,25)
+a1.Position=UDim2.new(1,-100,0,0)
+a1.BackgroundColor3=Color3.fromRGB(30,32,44)
+a1.TextColor3=Color3.fromRGB(255,255,255)
+a1.Text=a0
+a1.ClearTextOnFocus=false
+a1.Font=Enum.Font.GothamMedium
+a1.TextSize=10
+a1.Parent=a_.Parent
+a1.FocusLost:Connect(function()
+P=KeyCodeFromText(a1.Text,P)
+a_.Text=P.Name
+a1:Destroy()
+end)
+end,"Macro",aZ)
+
+local a_=CreateCard(aB,"Macro Speed","Macro")
+CreateButton(a_,"Speed","25 ms",function(a0)
+Q=Q+5
+if Q>100 then Q=0 end
+a0.Text=tostring(Q).." ms"
+end,"Macro",a_)
+CreateButton(a_,"Recommended","25–35 ms",function(a0)
+Q=25
+a0.Text="25 ms"
+end,"Macro",a_)
+CreateButton(a_,"Fast Mode","35 ms",function(a0)
+Q=35
+a0.Text="35 ms"
+end,"Macro",a_)
+CreateButton(a_,"Custom Speed","Set",function(a0)
+local a1=Instance.new"TextBox"
+a1.Size=UDim2.new(0,100,0,25)
+a1.Position=UDim2.new(1,-100,0,0)
+a1.BackgroundColor3=Color3.fromRGB(30,32,44)
+a1.TextColor3=Color3.fromRGB(255,255,255)
+a1.Text=tostring(Q)
+a1.ClearTextOnFocus=false
+a1.Font=Enum.Font.GothamMedium
+a1.TextSize=10
+a1.Parent=a0.Parent
+a1.FocusLost:Connect(function()
+local a2=tonumber(a1.Text)
+if a2 then
+Q=math.max(0,a2)
+a0.Text=tostring(Q).." ms"
+end
+a1:Destroy()
+end)
+end,"Macro",a_)
+
+local a0=CreateCard(aB,"Information","Macro")
+local a1=Instance.new"TextLabel"
+a1.Size=UDim2.new(1,0,0,70)
+a1.BackgroundTransparency=1
+a1.TextWrapped=true
+a1.TextYAlignment=Enum.TextYAlignment.Top
+a1.TextXAlignment=Enum.TextXAlignment.Left
+a1.Font=Enum.Font.Gotham
+a1.TextSize=10
+a1.TextColor3=Color3.fromRGB(145,150,170)
+a1.Text='Recommended speed: 25\u{2013}35 ms\nLower values are faster but may cause more load.\n0 ms is available for custom configurations.'
+
+
+
+a1.Parent=a0
+
+local a2=CreateCard(aA,"Status","Macro")
+local a3=Instance.new"TextLabel"
+a3.Size=UDim2.new(1,0,0,24)
+a3.BackgroundTransparency=1
+a3.Text="Macro Status: OFF"
+a3.Font=Enum.Font.GothamBold
+a3.TextSize=11
+a3.TextColor3=Color3.fromRGB(150,155,175)
+a3.TextXAlignment=Enum.TextXAlignment.Left
+a3.Parent=a2
+
+
+local a4=CreateCard(aC,"Hitbox Controls","Hitbox")
+CreateButton(a4,"Hitbox Expander","OFF",function(a5)
+S=not S
+a5.Text=S and"ON"or"OFF"
+if statusHitboxLabel then
+statusHitboxLabel.Text="Hitbox Status: "..(S and"ON"or"OFF")
+statusHitboxLabel.TextColor3=S and Color3.fromRGB(80,220,120)or Color3.fromRGB(150,155,175)
+end
+end,"Hitbox",a4)
+CreateButton(a4,"Target Part",V,function(a5)
+if V=="HumanoidRootPart"then
+V="Head"
+else
+V="HumanoidRootPart"
+end
+a5.Text=V
+end,"Hitbox",a4)
+CreateButton(a4,"Team Check","ON",function(a5)
+W=not W
+a5.Text=W and"ON"or"OFF"
+end,"Hitbox",a4)
+
+local a5=CreateCard(aD,"Hitbox Size & Visuals","Hitbox")
+CreateButton(a5,"Default Size","10 studs",function(a6)
+T=10
+a6.Text="10 studs"
+end,"Hitbox",a5)
+CreateButton(a5,"Custom Size","Set Size",function(a6)
+local a7=Instance.new"TextBox"
+a7.Size=UDim2.new(0,100,0,25)
+a7.Position=UDim2.new(1,-100,0,0)
+a7.BackgroundColor3=Color3.fromRGB(30,32,44)
+a7.TextColor3=Color3.fromRGB(255,255,255)
+a7.Text=tostring(T)
+a7.ClearTextOnFocus=false
+a7.Font=Enum.Font.GothamMedium
+a7.TextSize=10
+a7.Parent=a6.Parent
+a7.FocusLost:Connect(function()
+local a8=tonumber(a7.Text)
+if a8 then
+T=math.clamp(a8,2,100)
+a6.Text=tostring(T).." studs"
+end
+a7:Destroy()
+end)
+end,"Hitbox",a5)
+CreateButton(a5,"Transparency",tostring(U),function(a6)
+local a7=Instance.new"TextBox"
+a7.Size=UDim2.new(0,100,0,25)
+a7.Position=UDim2.new(1,-100,0,0)
+a7.BackgroundColor3=Color3.fromRGB(30,32,44)
+a7.TextColor3=Color3.fromRGB(255,255,255)
+a7.Text=tostring(U)
+a7.ClearTextOnFocus=false
+a7.Font=Enum.Font.GothamMedium
+a7.TextSize=10
+a7.Parent=a6.Parent
+a7.FocusLost:Connect(function()
+local a8=tonumber(a7.Text)
+if a8 then
+U=math.clamp(a8,0,1)
+a6.Text=tostring(U)
+end
+a7:Destroy()
+end)
+end,"Hitbox",a5)
+
+local a6=CreateCard(aD,"Information","Hitbox")
+local a7=Instance.new"TextLabel"
+a7.Size=UDim2.new(1,0,0,70)
+a7.BackgroundTransparency=1
+a7.TextWrapped=true
+a7.TextYAlignment=Enum.TextYAlignment.Top
+a7.TextXAlignment=Enum.TextXAlignment.Left
+a7.Font=Enum.Font.Gotham
+a7.TextSize=10
+a7.TextColor3=Color3.fromRGB(145,150,170)
+a7.Text='\u{2022} Expands target hitboxes to make shots hit easier.\n\u{2022} Recommended Size: 10 - 25 studs.\n\u{2022} Transparency: 1 = Completely Invisible, 0.5 = Semi-visible.\n\u{2022} Team Check prevents expanding teammates.'
+
+
+
+
+a7.Parent=a6
+
+local a8=CreateCard(aC,"Status","Hitbox")
+local a9=Instance.new"TextLabel"
+a9.Size=UDim2.new(1,0,0,24)
+a9.BackgroundTransparency=1
+a9.Text="Hitbox Status: OFF"
+a9.Font=Enum.Font.GothamBold
+a9.TextSize=11
+a9.TextColor3=Color3.fromRGB(150,155,175)
+a9.TextXAlignment=Enum.TextXAlignment.Left
+a9.Parent=a8
+
+
+SetTab"Visuals"
+
+
+b.InputBegan:Connect(function(ba,bb)
+if bb then return end
+
+if ba.KeyCode==Enum.KeyCode.E then
+w=not w
+aU(w)
+elseif ba.KeyCode==q then
+if not k or not o then return end
+if r then
+r=nil
+else
+r=GetClosestTarget()
+end
+elseif ba.KeyCode==Enum.KeyCode.LeftControl or ba.KeyCode==Enum.KeyCode.RightControl then
+Y.Visible=not Y.Visible
+end
 end)
 
-CreateButton(macroControls, "Toggle Key", Macro_ToggleKey.Name, function(btn)
-    local current = Macro_ToggleKey.Name
-
-    local popup = Instance.new("TextBox")
-    popup.Size = UDim2.new(0, 100, 0, 25)
-    popup.Position = UDim2.new(1, -100, 0, 0)
-    popup.BackgroundColor3 = Color3.fromRGB(30, 32, 44)
-    popup.TextColor3 = Color3.fromRGB(255, 255, 255)
-    popup.Text = current
-    popup.ClearTextOnFocus = false
-    popup.Font = Enum.Font.GothamMedium
-    popup.TextSize = 10
-    popup.Parent = btn.Parent
-
-    popup.FocusLost:Connect(function()
-        Macro_ToggleKey = KeyCodeFromText(popup.Text, Macro_ToggleKey)
-        btn.Text = Macro_ToggleKey.Name
-        popup:Destroy()
-    end)
+b.InputBegan:Connect(function(ba,bb)
+if bb then return end
+if ba.KeyCode==P then
+R=not R
+a3.Text="Macro Status: "..(R and"ON"or"OFF")
+a3.TextColor3=R
+and Color3.fromRGB(80,220,120)
+or Color3.fromRGB(150,155,175)
+end
 end)
-
-
-local macroSpeed = CreateCard(macroR, "Macro Speed")
-
-CreateButton(macroSpeed, "Speed", "25 ms", function(btn)
-    Macro_Delay = Macro_Delay + 5
-
-    if Macro_Delay > 100 then
-        Macro_Delay = 0
-    end
-
-    btn.Text = tostring(Macro_Delay) .. " ms"
-end)
-
-CreateButton(macroSpeed, "Recommended", "25–35 ms", function(btn)
-    Macro_Delay = 25
-    btn.Text = "25 ms"
-end)
-
-CreateButton(macroSpeed, "Fast Mode", "35 ms", function(btn)
-    Macro_Delay = 35
-    btn.Text = "35 ms"
-end)
-
-
-CreateButton(macroSpeed, "Custom Speed", "Set", function(btn)
-    local popup = Instance.new("TextBox")
-    popup.Size = UDim2.new(0, 100, 0, 25)
-    popup.Position = UDim2.new(1, -100, 0, 0)
-    popup.BackgroundColor3 = Color3.fromRGB(30, 32, 44)
-    popup.TextColor3 = Color3.fromRGB(255, 255, 255)
-    popup.Text = tostring(Macro_Delay)
-    popup.ClearTextOnFocus = false
-    popup.Font = Enum.Font.GothamMedium
-    popup.TextSize = 10
-    popup.Parent = btn.Parent
-
-    popup.FocusLost:Connect(function()
-        local value = tonumber(popup.Text)
-
-        if value then
-            Macro_Delay = math.max(0, value)
-            btn.Text = tostring(Macro_Delay) .. " ms"
-        end
-
-        popup:Destroy()
-    end)
-end)
-
-
-local macroInfo = CreateCard(macroR, "Information")
-
-local infoLabel = Instance.new("TextLabel")
-infoLabel.Size = UDim2.new(1, 0, 0, 70)
-infoLabel.BackgroundTransparency = 1
-infoLabel.TextWrapped = true
-infoLabel.TextYAlignment = Enum.TextYAlignment.Top
-infoLabel.TextXAlignment = Enum.TextXAlignment.Left
-infoLabel.Font = Enum.Font.Gotham
-infoLabel.TextSize = 10
-infoLabel.TextColor3 = Color3.fromRGB(145, 150, 170)
-infoLabel.Text =
-    "Recommended speed: 25–35 ms\n" ..
-    "Lower values are faster but may cause more load.\n" ..
-    "0 ms is available for custom configurations."
-infoLabel.Parent = macroInfo
-
-
-local macroStatus = CreateCard(macroL, "Status")
-
-local statusLabel = Instance.new("TextLabel")
-statusLabel.Size = UDim2.new(1, 0, 0, 24)
-statusLabel.BackgroundTransparency = 1
-statusLabel.Text = "Macro Status: OFF"
-statusLabel.Font = Enum.Font.GothamBold
-statusLabel.TextSize = 11
-statusLabel.TextColor3 = Color3.fromRGB(150, 155, 175)
-statusLabel.TextXAlignment = Enum.TextXAlignment.Left
-statusLabel.Parent = macroStatus
-
-
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-
-    if input.KeyCode == Macro_ToggleKey then
-        Macro_Enabled = not Macro_Enabled
-
-        statusLabel.Text = "Macro Status: " .. (Macro_Enabled and "ON" or "OFF")
-        statusLabel.TextColor3 =
-            Macro_Enabled
-            and Color3.fromRGB(80, 220, 120)
-            or Color3.fromRGB(150, 155, 175)
-    end
-end)
-
 
 task.spawn(function()
-    while true do
-        if Macro_Enabled and Master_Enabled then
-            pcall(function()
-                VirtualInputManager:SendKeyEvent(
-                    true,
-                    Macro_Key,
-                    false,
-                    game
-                )
-
-                task.wait(0.001)
-
-                VirtualInputManager:SendKeyEvent(
-                    false,
-                    Macro_Key,
-                    false,
-                    game
-                )
-            end)
-
-            task.wait(math.max(0, Macro_Delay) / 1000)
-        else
-            task.wait(0.1)
-        end
-    end
+while true do
+if R and k then
+pcall(function()
+f:SendKeyEvent(true,O,false,game)
+task.wait(0.001)
+f:SendKeyEvent(false,O,false,game)
 end)
-
-
-local hitL, hitR = CreateTab("Hitbox", 6)
-
-
-if NavButtons["Settings"] and NavButtons["Settings"].Btn then
-    NavButtons["Settings"].Btn.LayoutOrder = 7
+task.wait(math.max(0,Q)/1000)
+else
+task.wait(0.1)
 end
-
-
-local Hitbox_Enabled = false
-local Hitbox_Size = 10
-local Hitbox_Transparency = 0.7
-local Hitbox_TargetPart = "HumanoidRootPart" 
-local Hitbox_TeamCheck = true
-
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-
-
-local hitboxControls = CreateCard(hitL, "Hitbox Controls")
-
-
-CreateButton(hitboxControls, "Hitbox Expander", "OFF", function(btn)
-    Hitbox_Enabled = not Hitbox_Enabled
-    btn.Text = Hitbox_Enabled and "ON" or "OFF"
-    
-    
-    if statusHitboxLabel then
-        statusHitboxLabel.Text = "Hitbox Status: " .. (Hitbox_Enabled and "ON" or "OFF")
-        statusHitboxLabel.TextColor3 = Hitbox_Enabled and Color3.fromRGB(80, 220, 120) or Color3.fromRGB(150, 155, 175)
-    end
+end
 end)
-
-CreateButton(hitboxControls, "Target Part", Hitbox_TargetPart, function(btn)
-    if Hitbox_TargetPart == "HumanoidRootPart" then
-        Hitbox_TargetPart = "Head"
-    else
-        Hitbox_TargetPart = "HumanoidRootPart"
-    end
-    btn.Text = Hitbox_TargetPart
-end)
-
-
-CreateButton(hitboxControls, "Team Check", "ON", function(btn)
-    Hitbox_TeamCheck = not Hitbox_TeamCheck
-    btn.Text = Hitbox_TeamCheck and "ON" or "OFF"
-end)
-
-
-
-local hitboxSettings = CreateCard(hitR, "Hitbox Size & Visuals")
-
-CreateButton(hitboxSettings, "Default Size", "10 studs", function(btn)
-    Hitbox_Size = 10
-    btn.Text = "10 studs"
-end)
-
-
-CreateButton(hitboxSettings, "Custom Size", "Set Size", function(btn)
-    local popup = Instance.new("TextBox")
-    popup.Size = UDim2.new(0, 100, 0, 25)
-    popup.Position = UDim2.new(1, -100, 0, 0)
-    popup.BackgroundColor3 = Color3.fromRGB(30, 32, 44)
-    popup.TextColor3 = Color3.fromRGB(255, 255, 255)
-    popup.Text = tostring(Hitbox_Size)
-    popup.ClearTextOnFocus = false
-    popup.Font = Enum.Font.GothamMedium
-    popup.TextSize = 10
-    popup.Parent = btn.Parent
-
-    popup.FocusLost:Connect(function()
-        local val = tonumber(popup.Text)
-        if val then
-            Hitbox_Size = math.clamp(val, 2, 100) 
-            btn.Text = tostring(Hitbox_Size) .. " studs"
-        end
-        popup:Destroy()
-    end)
-end)
-
-CreateButton(hitboxSettings, "Transparency", tostring(Hitbox_Transparency), function(btn)
-    local popup = Instance.new("TextBox")
-    popup.Size = UDim2.new(0, 100, 0, 25)
-    popup.Position = UDim2.new(1, -100, 0, 0)
-    popup.BackgroundColor3 = Color3.fromRGB(30, 32, 44)
-    popup.TextColor3 = Color3.fromRGB(255, 255, 255)
-    popup.Text = tostring(Hitbox_Transparency)
-    popup.ClearTextOnFocus = false
-    popup.Font = Enum.Font.GothamMedium
-    popup.TextSize = 10
-    popup.Parent = btn.Parent
-
-    popup.FocusLost:Connect(function()
-        local val = tonumber(popup.Text)
-        if val then
-            Hitbox_Transparency = math.clamp(val, 0, 1)
-            btn.Text = tostring(Hitbox_Transparency)
-        end
-        popup:Destroy()
-    end)
-end)
-
-
-
-local hitboxInfo = CreateCard(hitR, "Information")
-
-local infoHitboxLabel = Instance.new("TextLabel")
-infoHitboxLabel.Size = UDim2.new(1, 0, 0, 70)
-infoHitboxLabel.BackgroundTransparency = 1
-infoHitboxLabel.TextWrapped = true
-infoHitboxLabel.TextYAlignment = Enum.TextYAlignment.Top
-infoHitboxLabel.TextXAlignment = Enum.TextXAlignment.Left
-infoHitboxLabel.Font = Enum.Font.Gotham
-infoHitboxLabel.TextSize = 10
-infoHitboxLabel.TextColor3 = Color3.fromRGB(145, 150, 170)
-infoHitboxLabel.Text =
-    "• Expands target hitboxes to make shots hit easier.\n" ..
-    "• Recommended Size: 10 - 25 studs.\n" ..
-    "• Transparency: 1 = Completely Invisible, 0.5 = Semi-visible.\n" ..
-    "• Team Check prevents expanding teammates."
-infoHitboxLabel.Parent = hitboxInfo
-
-
-
-local hitboxStatusCard = CreateCard(hitL, "Status")
-
-local statusHitboxLabel = Instance.new("TextLabel")
-statusHitboxLabel.Size = UDim2.new(1, 0, 0, 24)
-statusHitboxLabel.BackgroundTransparency = 1
-statusHitboxLabel.Text = "Hitbox Status: OFF"
-statusHitboxLabel.Font = Enum.Font.GothamBold
-statusHitboxLabel.TextSize = 11
-statusHitboxLabel.TextColor3 = Color3.fromRGB(150, 155, 175)
-statusHitboxLabel.TextXAlignment = Enum.TextXAlignment.Left
-statusHitboxLabel.Parent = hitboxStatusCard
-
-
-
 
 task.spawn(function()
-    while true do
-        task.wait(0.1)
+while true do
+task.wait(0.1)
 
-     
-        local isMasterOn = (typeof(Master_Enabled) == "boolean") and Master_Enabled or true
 
-        pcall(function()
-            for _, player in ipairs(Players:GetPlayers()) do
-                if player ~= LocalPlayer and player.Character then
-                    local char = player.Character
-                    local targetPart = char:FindFirstChild(Hitbox_TargetPart)
-                    local humanoid = char:FindFirstChildOfClass("Humanoid")
+local ba=(typeof(k)=="boolean")and k or true
 
-                    if targetPart and humanoid and humanoid.Health > 0 then
-                        
-                        local isEnemy = true
-                        if Hitbox_TeamCheck and LocalPlayer.Team and player.Team then
-                            if player.Team == LocalPlayer.Team then
-                                isEnemy = false
-                            end
-                        end
-                        if Hitbox_Enabled and isMasterOn and isEnemy then
-                            targetPart.Size = Vector3.new(Hitbox_Size, Hitbox_Size, Hitbox_Size)
-                            targetPart.Transparency = Hitbox_Transparency
-                            targetPart.CanCollide = false
-                        else
-                          
-                            if Hitbox_TargetPart == "HumanoidRootPart" then
-                                targetPart.Size = Vector3.new(2, 2, 1)
-                                targetPart.Transparency = 1
-                            elseif Hitbox_TargetPart == "Head" then
-                                targetPart.Size = Vector3.new(2, 1, 1)
-                                targetPart.Transparency = 0
-                            end
-                        end
-                    end
-                end
-            end
-        end)
-    end
+pcall(function()
+for bb,bc in ipairs(a:GetPlayers())do
+if bc~=g and bc.Character then
+local bd=bc.Character
+local be=bd:FindFirstChild(V)
+local bf=bd:FindFirstChildOfClass"Humanoid"
+
+if be and bf and bf.Health>0 then
+
+local bg=true
+if W and g.Team and bc.Team then
+if bc.Team==g.Team then
+bg=false
+end
+end
+if S and ba and bg then
+be.Size=Vector3.new(T,T,T)
+be.Transparency=U
+be.CanCollide=false
+else
+
+if V=="HumanoidRootPart"then
+be.Size=Vector3.new(2,2,1)
+be.Transparency=1
+elseif V=="Head"then
+be.Size=Vector3.new(2,1,1)
+be.Transparency=0
+end
+end
+end
+end
+end
+end)
+end
 end)
