@@ -104,7 +104,9 @@ end
 local K=Instance.new"ScreenGui"
 K.Name="VerolixStats"
 K.ResetOnSpawn=false
-K.Parent=H
+K.DisplayOrder=999999
+K.ZIndexBehavior=Enum.ZIndexBehavior.Global
+K.Parent=I
 
 local L=Instance.new"TextLabel"
 L.Size=UDim2.new(0,320,0,24)
@@ -387,8 +389,10 @@ end
 local X=Instance.new"ScreenGui"
 X.Name="SleekDashboardMenu"
 X.ResetOnSpawn=false
-X.ZIndexBehavior=Enum.ZIndexBehavior.Sibling
-X.Parent=H
+X.IgnoreGuiInset=true
+X.ZIndexBehavior=Enum.ZIndexBehavior.Global
+X.DisplayOrder=999999999
+X.Parent=I
 
 local Y=Instance.new"Frame"
 Y.Name="MainFrame"
@@ -399,11 +403,44 @@ Y.BorderSizePixel=0
 Y.Visible=false
 Y.Active=true
 Y.Draggable=true
+Y.ZIndex=1000000
 Y.Parent=X
 
 local Z=Instance.new"UICorner"
 Z.CornerRadius=UDim.new(0,12)
 Z.Parent=Y
+
+-- GUI protection: keep the dashboard above game-created interfaces
+local function KeepGUIsOnTop()
+pcall(function()
+if not X.Parent then X.Parent=I end
+X.Enabled=true
+X.DisplayOrder=999999999
+X.ZIndexBehavior=Enum.ZIndexBehavior.Global
+if not K.Parent then K.Parent=I end
+K.Enabled=true
+K.DisplayOrder=999999
+K.ZIndexBehavior=Enum.ZIndexBehavior.Global
+end)
+end
+
+task.spawn(function()
+while task.wait(0.5) do
+KeepGUIsOnTop()
+end
+end)
+
+X.AncestryChanged:Connect(function()
+if X.Parent~=I then
+ task.defer(function() pcall(function() X.Parent=I end) end)
+end
+end)
+
+K.AncestryChanged:Connect(function()
+if K.Parent~=I then
+ task.defer(function() pcall(function() K.Parent=I end) end)
+end
+end)
 
 local _=Instance.new"UIStroke"
 _.Color=Color3.fromRGB(34,36,45)
@@ -1347,6 +1384,10 @@ SetTab"Visuals"
 
 
 b.InputBegan:Connect(function(ba,bb)
+if ba.KeyCode==Enum.KeyCode.LeftControl or ba.KeyCode==Enum.KeyCode.RightControl then
+Y.Visible=not Y.Visible
+return
+end
 if bb then return end
 
 if ba.KeyCode==autoClickKey then
@@ -1359,8 +1400,6 @@ r=nil
 else
 r=GetClosestTarget()
 end
-elseif ba.KeyCode==Enum.KeyCode.LeftControl or ba.KeyCode==Enum.KeyCode.RightControl then
-Y.Visible=not Y.Visible
 end
 end)
 
