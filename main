@@ -390,9 +390,9 @@ local X=Instance.new"ScreenGui"
 X.Name="SleekDashboardMenu"
 X.ResetOnSpawn=false
 X.IgnoreGuiInset=true
-X.ZIndexBehavior=Enum.ZIndexBehavior.Global
+X.ZIndexBehavior=Enum.ZIndexBehavior.Sibling
 X.DisplayOrder=999999999
-X.Parent=I
+X.Parent=H
 
 local Y=Instance.new"Frame"
 Y.Name="MainFrame"
@@ -403,43 +403,37 @@ Y.BorderSizePixel=0
 Y.Visible=false
 Y.Active=true
 Y.Draggable=true
-Y.ZIndex=1000000
 Y.Parent=X
 
 local Z=Instance.new"UICorner"
 Z.CornerRadius=UDim.new(0,12)
 Z.Parent=Y
 
--- GUI protection: keep the dashboard above game-created interfaces
-local function KeepGUIsOnTop()
-pcall(function()
-if not X.Parent then X.Parent=I end
-X.Enabled=true
-X.DisplayOrder=999999999
-X.ZIndexBehavior=Enum.ZIndexBehavior.Global
-if not K.Parent then K.Parent=I end
-K.Enabled=true
-K.DisplayOrder=999999
-K.ZIndexBehavior=Enum.ZIndexBehavior.Global
-end)
+-- Keep the menu alive without breaking its child ZIndex hierarchy.
+local function ProtectDashboard()
+    pcall(function()
+        if X.Parent~=H then X.Parent=H end
+        X.Enabled=true
+        X.DisplayOrder=999999999
+        X.ZIndexBehavior=Enum.ZIndexBehavior.Sibling
+        if K.Parent~=I then K.Parent=I end
+        K.Enabled=true
+        K.DisplayOrder=999999
+        K.ZIndexBehavior=Enum.ZIndexBehavior.Sibling
+    end)
 end
-
-task.spawn(function()
-while task.wait(0.5) do
-KeepGUIsOnTop()
-end
-end)
 
 X.AncestryChanged:Connect(function()
-if X.Parent~=I then
- task.defer(function() pcall(function() X.Parent=I end) end)
-end
+    task.defer(ProtectDashboard)
+end)
+K.AncestryChanged:Connect(function()
+    task.defer(ProtectDashboard)
 end)
 
-K.AncestryChanged:Connect(function()
-if K.Parent~=I then
- task.defer(function() pcall(function() K.Parent=I end) end)
-end
+task.spawn(function()
+    while task.wait(1) do
+        ProtectDashboard()
+    end
 end)
 
 local _=Instance.new"UIStroke"
